@@ -60,10 +60,35 @@ impl<'a> StrStream for SplitWhitespace<'a> {
 /// Implementations for primtives consume and parse one element from a stream
 /// (advancing a stream).
 /// Implementations for tuples just parse elements from left to right.
-/// Tuples can be nested.
 /// Implementation for vector parses till the end of stream.
 ///
-/// For example, see [`parse_string`](fn.parse_string.html);
+/// # Examples
+///
+/// Using a trait directly
+/// 
+/// ```
+/// use whiteread::White;
+/// let mut stream = "123".split_whitespace();
+/// assert_eq!(<i32 as White>::read(&mut stream).unwrap(), 123)
+/// ```
+///
+/// Semantics of provided trait implementations:
+///
+/// ```
+/// # use whiteread::parse_string;
+/// # use whiteread::Lengthed;
+/// // tuples (up to 3)
+/// assert_eq!(parse_string("2 1 3 4").ok(), Some( ((2, 1), (3, 4)) ));
+///
+/// // eager vector
+/// assert_eq!(parse_string("2 1 3 4").ok(), Some( vec![2, 1, 3, 4] ));
+///
+/// // vec prefixed with length
+/// assert_eq!(parse_string("2 1 3 4").ok(), Some( Lengthed(vec![1, 3]) ));
+///
+/// // you can mix impls of course
+/// assert_eq!(parse_string("a 1 b 2").ok(), Some( vec![('a', 1), ('b', 2)] ));
+/// ```
 pub trait White: Sized {
     fn read<I: StrStream>(it: &mut I) -> WhiteResult<Self>;
 }
@@ -129,6 +154,7 @@ pub trait WhiteResultExt<T> {
     /// If that description is confusing, check out [src].
     ///
     /// # Examples
+    ///
     /// Summing integers from a file with proper error handling.
     ///
     /// ```no_run
@@ -183,6 +209,13 @@ white!(String);
 white!(f32);
 white!(f64);
 
+impl White for char {
+	fn read<I: StrStream>(it: &mut I) -> WhiteResult<char> {
+		let s = try!( it.next() );
+		s.and_then( |s| s.chars().next() ).ok_or(TooShort)
+	}
+}
+
 impl<T: White, U: White> White for (T, U) {
     fn read<I: StrStream>(it: &mut I) -> WhiteResult<(T, U)> {
         Ok( (try!( White::read(it) ), try!( White::read(it) )) )
@@ -213,20 +246,20 @@ impl<T: White> White for Vec<T> {
 ///
 /// # Examples
 /// ```
-/// # use whiteread::{parse_string, Lenghted};
-/// let Lenghted(v): Lenghted<u8> = parse_string("3 5 6 7 8 nine").unwrap();
+/// # use whiteread::{parse_string, Lengthed};
+/// let Lengthed(v): Lengthed<u8> = parse_string("3 5 6 7 8 nine").unwrap();
 /// assert_eq!(v, &[5, 6, 7]);
 /// ```
-#[derive(Debug)]
-pub struct Lenghted<T>(pub Vec<T>);
+#[derive(Debug, Eq, PartialEq)]
+pub struct Lengthed<T>(pub Vec<T>);
 
-impl<T: White> White for Lenghted<T> {
-    fn read<I: StrStream>(it: &mut I) -> WhiteResult<Lenghted<T>> {
+impl<T: White> White for Lengthed<T> {
+    fn read<I: StrStream>(it: &mut I) -> WhiteResult<Lengthed<T>> {
         let sz = try!(White::read(it));
         let mut v = Vec::with_capacity(sz);
         while let Some(x) = try!(White::read(it).ok_or_none()) {
             v.push(x);
-            if v.len() == sz { return Ok(Lenghted(v)); }
+            if v.len() == sz { return Ok(Lengthed(v)); }
         }
         Err(TooShort)
     }
@@ -274,8 +307,8 @@ pub fn parse_line<T: White>() -> WhiteResult<T> {
 /// # Examples
 /// ```
 /// # use whiteread::parse_string;
-/// let (hi, nums): (String, Vec<u8>) = parse_string(" hi 1 2 3").unwrap();
-/// assert!(hi == "hi" && nums == &[1,2,3]);
+/// let number: i32 = parse_string(" 123  foo").unwrap();
+/// assert!(number == 123);
 /// ```
 pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
     White::read(&mut s.split_whitespace())
@@ -290,7 +323,17 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 /// and also provides almost zero-allocation parsing.
 ///
 /// # Examples
-/// The following will accept both of the following inputs:
+///
+/// This code
+///
+/// ```no_run
+/// # use whiteread::WhiteReader;
+/// let i = std::io::stdin();
+/// let mut i = WhiteReader::new(i.lock());
+/// let (n, k): (i32, f64) = i.p();
+/// ```
+///
+/// will accept both of following inputs:
 ///
 /// ```text
 /// 1
@@ -302,11 +345,33 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 /// 1 2
 /// ```
 ///
-/// ```no_run
-/// # use whiteread::WhiteReader;
-/// let i = std::io::stdin();
-/// let mut i = WhiteReader::new(i.lock());
-/// let (n, k): (i32, f64) = i.p();
+///
+/// Overview of how various methods handle newlines:
+/// 
+/// ```
+/// # use whiteread::{WhiteReader,TooShort};
+/// let data = std::io::Cursor::new(b"1 2\n\n3 4 5\n6" as &[u8]);
+/// let mut r = WhiteReader::new(data);
+/// assert_eq!(r.get_line().unwrap().trim(), "1 2");
+/// assert_eq!(r.parse().ok(), Some(1u8));
+/// assert_eq!(r.parse().ok(), Some( (2u8, 3u8) ));
+/// assert_eq!(r.continue_line().ok(), Some(4u8));
+/// assert_eq!(r.parse_line().ok(), Some(6u8));
+/// // from now, everything will return Err(TooShort)
+/// # match r.parse::<u8>() {
+/// #     Err(TooShort) => (),
+/// #     _ => panic!()
+/// # }
+/// # 
+/// # match r.parse_line::<u8>() {
+/// #     Err(TooShort) => (),
+/// #     _ => panic!()
+/// # }
+/// # 
+/// # match r.get_line() {
+/// #     Err(TooShort) => (),
+/// #     _ => panic!()
+/// # }
 /// ```
 pub struct WhiteReader<B: BufRead> {
     buf: B,
@@ -388,31 +453,5 @@ impl<B: BufRead> StrStream for WhiteReader<B> {
             }
             if let None = try!( self.read_line() ) { return Ok(None) };
         }
-    }
-}
-
-#[test]
-fn test_newline_handling() {
-    let data = std::io::Cursor::new(b"1 2\n\n3 4 5\n6" as &[u8]);
-    let mut r = WhiteReader::new(data);
-    assert_eq!(r.get_line().unwrap().trim(), "1 2");
-    assert_eq!(r.parse().ok(), Some(1u8));
-    assert_eq!(r.parse().ok(), Some( (2u8, 3u8) ));
-    assert_eq!(r.continue_line().ok(), Some(4u8));
-    assert_eq!(r.parse_line().ok(), Some(6u8));
-    
-    match r.parse::<u8>() {
-        Err(TooShort) => (),
-        _ => panic!()
-    }
-    
-    match r.parse_line::<u8>() {
-        Err(TooShort) => (),
-        _ => panic!()
-    }
-    
-    match r.get_line() {
-        Err(TooShort) => (),
-        _ => panic!()
     }
 }

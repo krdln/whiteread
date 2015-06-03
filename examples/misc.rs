@@ -1,5 +1,5 @@
 extern crate whiteread;
-use whiteread::{WhiteReader, parse_string, Lenghted, White};
+use whiteread::{WhiteReader, parse_string, Lengthed, White};
 
 fn main() {
 	// parse_string function
@@ -20,7 +20,7 @@ fn main() {
 		
 		// Lenghted<T> wraps Vec<T> and is prefixed by length
 		let data = "42 hejka  3 1 2 3  2 4 5  1 6";
-		let foo : ((i32, String), Vec<Lenghted<i32>>) = parse_string(data).unwrap();
+		let foo : ((i32, String), Vec<Lengthed<i32>>) = parse_string(data).unwrap();
 		println!("{} parsed as:\n{:?}\n", data, foo);
 		println!("Now give me pairs: (end with ^D)");
 	
