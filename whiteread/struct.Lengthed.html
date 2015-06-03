@@ -45,12 +45,12 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-1149' class='srclink' href='../src/whiteread/lib.rs.html#254' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-1159' class='srclink' href='../src/whiteread/lib.rs.html#267' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct Lengthed&lt;T&gt;(pub <a class='struct' href='http://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;T&gt;);</pre><div class='docblock'><p>Wrapper for reading vector of values represented by a list prepended by a number of elements.</p>
 
 <h1 id="examples" class='section-header'><a
                            href="#examples">Examples</a></h1><pre id='rust-example-rendered' class='rust '>
-<span class='kw'>let</span> <span class='ident'>Lengthed</span>(<span class='ident'>v</span>): <span class='ident'>Lengthed</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>parse_string</span>(<span class='string'>&quot;3 5 6 7 8 nine&quot;</span>).<span class='ident'>unwrap</span>();
+<span class='kw'>let</span> <span class='ident'>Lengthed</span>(<span class='ident'>v</span>): <span class='ident'>Lengthed</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>parse_string</span>(<span class='string'>&quot;3 5 6 7&quot;</span>).<span class='ident'>unwrap</span>();
 <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>v</span>, <span class='kw-2'>&amp;</span>[<span class='number'>5</span>, <span class='number'>6</span>, <span class='number'>7</span>]);
 </pre>
 </div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt; <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a> for <a class='struct' href='../whiteread/struct.Lengthed.html' title='whiteread::Lengthed'>Lengthed</a>&lt;T&gt;</code></h3><div class='impl-items'><h4 id='method.read' class='method'><code>fn <a href='../whiteread/trait.White.html#method.read' class='fnname'>read</a>&lt;I: <a class='trait' href='../whiteread/trait.StrStream.html' title='whiteread::StrStream'>StrStream</a>&gt;(it: &amp;mut I) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;<a class='struct' href='../whiteread/struct.Lengthed.html' title='whiteread::Lengthed'>Lengthed</a>&lt;T&gt;&gt;</code></h4>

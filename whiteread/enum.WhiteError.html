@@ -45,16 +45,25 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-60' class='srclink' href='../src/whiteread/lib.rs.html#102-111' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-60' class='srclink' href='../src/whiteread/lib.rs.html#111-123' title='goto source code'>[src]</a></span></h1>
 <pre class='rust enum'>pub enum WhiteError {
     TooShort,
+    Leftovers,
     ParseError,
     IoError(<a class='struct' href='http://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>),
 }</pre><div class='docblock'><p>Error which can occur while parsing <code>White</code>`White` object.</p>
 
 <p>It&#39;s convertible into <code>io::Error</code>, so it composes well with other reading functions.</p>
+
+<h1 id="examples" class='section-header'><a
+                           href="#examples">Examples</a></h1><pre id='rust-example-rendered' class='rust '>
+<span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>) <span class='op'>=</span> <span class='ident'>parse_string</span>::<span class='op'>&lt;</span>(<span class='ident'>u8</span>, <span class='ident'>u16</span>)<span class='op'>&gt;</span>(<span class='string'>&quot;1&quot;</span>) {} <span class='kw'>else</span> { <span class='macro'>panic</span><span class='macro'>!</span>(); }
+<span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Err</span>(<span class='ident'>Leftovers</span>) <span class='op'>=</span> <span class='ident'>parse_string</span>::<span class='op'>&lt;</span><span class='ident'>char</span><span class='op'>&gt;</span>(<span class='string'>&quot;x y z&quot;</span>) {} <span class='kw'>else</span> { <span class='macro'>panic</span><span class='macro'>!</span>(); }
+<span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Err</span>(<span class='ident'>ParseError</span>) <span class='op'>=</span> <span class='ident'>parse_string</span>::<span class='op'>&lt;</span><span class='ident'>i32</span><span class='op'>&gt;</span>(<span class='string'>&quot;seven&quot;</span>) {} <span class='kw'>else</span> { <span class='macro'>panic</span><span class='macro'>!</span>(); }
+</pre>
 </div><h2 class='variants'>Variants</h2>
 <table><tr><td id='variant.TooShort'><code>TooShort</code></td><td><div class='docblock'><p>There was not enough input to parse a value.</p>
+</div></td></tr><tr><td id='variant.Leftovers'><code>Leftovers</code></td><td><div class='docblock'><p>Excessive input was provided.</p>
 </div></td></tr><tr><td id='variant.ParseError'><code>ParseError</code></td><td><div class='docblock'><p>Parse error occured (data was in invalid format).</p>
 </div></td></tr><tr><td id='variant.IoError'><code>IoError</code></td><td><div class='docblock'><p>IO Error occured.</p>
 </div></td></tr></table><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl <a class='trait' href='http://doc.rust-lang.org/nightly/core/convert/trait.From.html' title='core::convert::From'>From</a>&lt;<a class='struct' href='http://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>&gt; for <a class='enum' href='../whiteread/enum.WhiteError.html' title='whiteread::WhiteError'>WhiteError</a></code></h3><div class='impl-items'><h4 id='method.from' class='method'><code>fn <a href='http://doc.rust-lang.org/nightly/core/convert/trait.From.html#method.from' class='fnname'>from</a>(e: <a class='struct' href='http://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>) -&gt; <a class='enum' href='../whiteread/enum.WhiteError.html' title='whiteread::WhiteError'>WhiteError</a></code></h4>

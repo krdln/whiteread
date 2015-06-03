@@ -45,7 +45,7 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-1448' class='srclink' href='../src/whiteread/lib.rs.html#376-384' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-1497' class='srclink' href='../src/whiteread/lib.rs.html#394-402' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct WhiteReader&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; {
     // some fields omitted
 }</pre><div class='docblock'><p>Wrapper for BufRead allowing easy parsing values from a Reader.</p>
@@ -75,37 +75,63 @@ and also provides almost zero-allocation parsing.</p>
 
 <p>Overview of how various methods handle newlines:</p>
 <pre id='rust-example-rendered' class='rust '>
-<span class='kw'>let</span> <span class='ident'>data</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='string'>b&quot;1 2\n\n3 4 5\n6&quot;</span> <span class='kw'>as</span> <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]);
+<span class='kw'>let</span> <span class='ident'>data</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='string'>b&quot;1 2\n\n3 4 5\n6 7\n8\n&quot;</span> <span class='kw'>as</span> <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]);
 <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>r</span> <span class='op'>=</span> <span class='ident'>WhiteReader</span>::<span class='ident'>new</span>(<span class='ident'>data</span>);
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>get_line</span>().<span class='ident'>unwrap</span>().<span class='ident'>trim</span>(), <span class='string'>&quot;1 2&quot;</span>);
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>1u8</span>));
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>( (<span class='number'>2u8</span>, <span class='number'>3u8</span>) ));
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>continue_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>4u8</span>));
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>6u8</span>));
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>next_line</span>().<span class='ident'>unwrap</span>().<span class='ident'>trim</span>(), <span class='string'>&quot;1 2&quot;</span>);
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>1</span>));
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>( (<span class='number'>2</span>, <span class='number'>3</span>) ));   <span class='comment'>// continue_line would return `TooShort` here</span>
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>continue_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>4</span>)); <span class='comment'>// finish_line would return `Leftovers` here</span>
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>start_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>6</span>));   <span class='comment'>// line would return `Leftovers` here</span>
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>8</span>));
 <span class='comment'>// from now, everything will return Err(TooShort)</span>
 </pre>
-</div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h3><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>(buf: B) -&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h4>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h3><div class='docblock'>
+<h1 id="constructors" class='section-header'><a
+                           href="#constructors">Constructors</a></h1></div><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>(buf: B) -&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h4>
 <div class='docblock'><p>Wraps a BufRead.</p>
 
 <p>Note that you don&#39;t have to pass an owned buffered reader, it could be also <code>&amp;mut</code>`&amp;mut`.</p>
-</div><h4 id='method.parse' class='method'><code>fn <a href='#method.parse' class='fnname'>parse</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
+</div></div><h3 class='impl'><code>impl&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h3><div class='docblock'>
+<h1 id="parsing-methods" class='section-header'><a
+                           href="#parsing-methods">Parsing methods</a></h1>
+<p>Following methods parse some part of input into a White value.</p>
+
+<h1 id="errors" class='section-header'><a
+                           href="#errors">Errors</a></h1>
+<p>These methods may return <code>TooShort</code>`TooShort<code>,</code>`, <code>ParseError</code> or <code>IoError</code>`IoError` error variant.
+If they return other variants too, it is stated explicitely.</p>
+</div><div class='impl-items'><h4 id='method.parse' class='method'><code>fn <a href='#method.parse' class='fnname'>parse</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
 <div class='docblock'><p>Parses a White value without specialy treating newlines (just like <code>scanf</code>`scanf<code>or</code>` or <code>cin&gt;&gt;</code>`cin&gt;&gt;`)</p>
 </div><h4 id='method.p' class='method'><code>fn <a href='#method.p' class='fnname'>p</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; T</code></h4>
 <div class='docblock'><p>Just parse().unwrap().</p>
 
 <p>Use it if you really value your time. ;)</p>
-</div><h4 id='method.get_line' class='method'><code>fn <a href='#method.get_line' class='fnname'>get_line</a>(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;&amp;<a href='http://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
+</div><h4 id='method.line' class='method'><code>fn <a href='#method.line' class='fnname'>line</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Reads a new line from input and parses it into White value <strong>as a whole</strong>.</p>
+
+<p>The function is called just <code>line</code>`line<code>for brevity and also to make it look different than global</code>read_line` to avoid mistakes.</p>
+
+<h1 id="errors" class='section-header'><a
+                           href="#errors">Errors</a></h1>
+<p>Additionaly to usual parse errors, this method may also return <code>Leftovers</code>.</p>
+</div><h4 id='method.start_line' class='method'><code>fn <a href='#method.start_line' class='fnname'>start_line</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Reads a new line from input and parses some part of it into White value.</p>
+</div><h4 id='method.continue_line' class='method'><code>fn <a href='#method.continue_line' class='fnname'>continue_line</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Parses some part of current line into White value.</p>
+</div><h4 id='method.finish_line' class='method'><code>fn <a href='#method.finish_line' class='fnname'>finish_line</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
+<div class='docblock'><p>Parses remaining part of current line into White value.</p>
+
+<p>It could be used with <code>T=()</code>`T=()`, to just check if we&#39;re on the end of line.</p>
+
+<h1 id="errors" class='section-header'><a
+                           href="#errors">Errors</a></h1>
+<p>Additionaly to usual parse errors, this method may also return <code>Leftovers</code>.</p>
+</div></div><h3 class='impl'><code>impl&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h3><div class='docblock'>
+<h1 id="additional-methods" class='section-header'><a
+                           href="#additional-methods">Additional methods</a></h1></div><div class='impl-items'><h4 id='method.next_line' class='method'><code>fn <a href='#method.next_line' class='fnname'>next_line</a>(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;&amp;<a href='http://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
 <div class='docblock'><p>Reads a new line and returns it.</p>
 
-<p>This functions should be used when <code>parse</code>`parse<code>-like functions are insufficient or just to get a preview of a line. Note that line&#39;s content will not be considered consumed and will be available for</code>parse<code>and</code>` and <code>continue_line</code>.</p>
-</div><h4 id='method.parse_line' class='method'><code>fn <a href='#method.parse_line' class='fnname'>parse_line</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Reads a new line from input and parses it into White value.</p>
-
-<p>It&#39;s not an error when there are leftovers.
-They will be available to parse after.
-For more fine-grained control use <code>get_line</code>`get_line`.</p>
-</div><h4 id='method.continue_line' class='method'><code>fn <a href='#method.continue_line' class='fnname'>continue_line</a>&lt;T: <a class='trait' href='../whiteread/trait.White.html' title='whiteread::White'>White</a>&gt;(&amp;mut self) -&gt; <a class='type' href='../whiteread/type.WhiteResult.html' title='whiteread::WhiteResult'>WhiteResult</a>&lt;T&gt;</code></h4>
-<div class='docblock'><p>Parses remaining part of line into White value.</p>
+<p>This function should be used when <code>parse</code>`parse<code>-like functions are insufficient or just to get a preview of a line. Note that line&#39;s content will not be considered consumed and will be available for</code>parse<code>and</code>` and <code>continue_line</code>.</p>
 </div><h4 id='method.unwrap' class='method'><code>fn <a href='#method.unwrap' class='fnname'>unwrap</a>(self) -&gt; B</code></h4>
 <div class='docblock'><p>Gets underlying buffer back.</p>
 </div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; <a class='trait' href='../whiteread/trait.StrStream.html' title='whiteread::StrStream'>StrStream</a> for <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h3><div class='impl-items'><h4 id='method.next' class='method'><code>fn <a href='../whiteread/trait.StrStream.html#method.next' class='fnname'>next</a>(&amp;mut self) -&gt; <a class='type' href='http://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='http://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a href='http://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;&gt;</code></h4>

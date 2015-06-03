@@ -497,6 +497,61 @@
 <span id="455">455</span>
 <span id="456">456</span>
 <span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
 </pre><pre class='rust '>
 <span class='comment'>// #![feature(zero_one)] // TODO see below</span>
 
@@ -584,7 +639,7 @@
 <span class='doccomment'>/// assert_eq!(parse_string(&quot;2 1 3 4&quot;).ok(), Some( vec![2, 1, 3, 4] ));</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// // vec prefixed with length</span>
-<span class='doccomment'>/// assert_eq!(parse_string(&quot;2 1 3 4&quot;).ok(), Some( Lengthed(vec![1, 3]) ));</span>
+<span class='doccomment'>/// assert_eq!(parse_string(&quot;2 1 3&quot;).ok(), Some( Lengthed(vec![1, 3]) ));</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// // you can mix impls of course</span>
 <span class='doccomment'>/// assert_eq!(parse_string(&quot;a 1 b 2&quot;).ok(), Some( vec![(&#39;a&#39;, 1), (&#39;b&#39;, 2)] ));</span>
@@ -598,10 +653,22 @@
 <span class='doccomment'>/// Error which can occur while parsing `White` object.</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// It&#39;s convertible into `io::Error`, so it composes well with other reading functions.</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// # Examples</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// ```</span>
+<span class='doccomment'>/// # use whiteread::{parse_string, TooShort, Leftovers, ParseError};</span>
+<span class='doccomment'>/// if let Err(TooShort) = parse_string::&lt;(u8, u16)&gt;(&quot;1&quot;) {} else { panic!(); }</span>
+<span class='doccomment'>/// if let Err(Leftovers) = parse_string::&lt;char&gt;(&quot;x y z&quot;) {} else { panic!(); }</span>
+<span class='doccomment'>/// if let Err(ParseError) = parse_string::&lt;i32&gt;(&quot;seven&quot;) {} else { panic!(); }</span>
+<span class='doccomment'>/// ```</span>
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>)]</span>
 <span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>WhiteError</span> {
     <span class='doccomment'>/// There was not enough input to parse a value.</span>
     <span class='ident'>TooShort</span>,
+    
+    <span class='doccomment'>/// Excessive input was provided.</span>
+    <span class='ident'>Leftovers</span>,
     
     <span class='doccomment'>/// Parse error occured (data was in invalid format).</span>
     <span class='ident'>ParseError</span>,
@@ -620,6 +687,7 @@
     <span class='kw'>fn</span> <span class='ident'>description</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
         <span class='kw'>match</span> <span class='op'>*</span><span class='self'>self</span> {
             <span class='ident'>TooShort</span> <span class='op'>=&gt;</span> <span class='string'>&quot;not enough input to parse a value&quot;</span>,
+            <span class='ident'>Leftovers</span> <span class='op'>=&gt;</span> <span class='string'>&quot;excessive input provided&quot;</span>,
             <span class='ident'>ParseError</span> <span class='op'>=&gt;</span> <span class='string'>&quot;parse error occured&quot;</span>,
             <span class='ident'>IoError</span>(<span class='kw-2'>ref</span> <span class='ident'>e</span>) <span class='op'>=&gt;</span> <span class='ident'>e</span>.<span class='ident'>description</span>()
         }
@@ -710,10 +778,10 @@
 <span class='macro'>white</span><span class='macro'>!</span>(<span class='ident'>f64</span>);
 
 <span class='kw'>impl</span> <span class='ident'>White</span> <span class='kw'>for</span> <span class='ident'>char</span> {
-	<span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>StrStream</span><span class='op'>&gt;</span>(<span class='ident'>it</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>char</span><span class='op'>&gt;</span> {
-		<span class='kw'>let</span> <span class='ident'>s</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>it</span>.<span class='ident'>next</span>() );
-		<span class='ident'>s</span>.<span class='ident'>and_then</span>( <span class='op'>|</span><span class='ident'>s</span><span class='op'>|</span> <span class='ident'>s</span>.<span class='ident'>chars</span>().<span class='ident'>next</span>() ).<span class='ident'>ok_or</span>(<span class='ident'>TooShort</span>)
-	}
+    <span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>StrStream</span><span class='op'>&gt;</span>(<span class='ident'>it</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>char</span><span class='op'>&gt;</span> {
+        <span class='kw'>let</span> <span class='ident'>s</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>it</span>.<span class='ident'>next</span>() );
+        <span class='ident'>s</span>.<span class='ident'>and_then</span>( <span class='op'>|</span><span class='ident'>s</span><span class='op'>|</span> <span class='ident'>s</span>.<span class='ident'>chars</span>().<span class='ident'>next</span>() ).<span class='ident'>ok_or</span>(<span class='ident'>TooShort</span>)
+    }
 }
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span>, <span class='ident'>U</span>: <span class='ident'>White</span><span class='op'>&gt;</span> <span class='ident'>White</span> <span class='kw'>for</span> (<span class='ident'>T</span>, <span class='ident'>U</span>) {
@@ -747,7 +815,7 @@
 <span class='doccomment'>/// # Examples</span>
 <span class='doccomment'>/// ```</span>
 <span class='doccomment'>/// # use whiteread::{parse_string, Lengthed};</span>
-<span class='doccomment'>/// let Lengthed(v): Lengthed&lt;u8&gt; = parse_string(&quot;3 5 6 7 8 nine&quot;).unwrap();</span>
+<span class='doccomment'>/// let Lengthed(v): Lengthed&lt;u8&gt; = parse_string(&quot;3 5 6 7&quot;).unwrap();</span>
 <span class='doccomment'>/// assert_eq!(v, &amp;[5, 6, 7]);</span>
 <span class='doccomment'>/// ```</span>
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>, <span class='ident'>Eq</span>, <span class='ident'>PartialEq</span>)]</span>
@@ -785,7 +853,7 @@
 
 <span class='doccomment'>/// Helper function for parsing `White` value from one line of stdin.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// Leftovers are discarded.</span>
+<span class='doccomment'>/// Leftovers are considered an error.</span>
 <span class='doccomment'>/// This function locks a mutex and allocates a buffer, so</span>
 <span class='doccomment'>/// don&#39;t use it when reading more than few lines –</span>
 <span class='doccomment'>/// use [`WhiteReader`](struct.WhiteReader.html) instead.</span>
@@ -802,16 +870,20 @@
     <span class='ident'>parse_string</span>(<span class='kw-2'>&amp;</span><span class='ident'>line</span>)
 }
 
-<span class='doccomment'>/// Helper function for parsing `White` value from string. Leftovers are discarded.</span>
+<span class='doccomment'>/// Helper function for parsing `White` value from string. Leftovers are considered an error.</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// # Examples</span>
 <span class='doccomment'>/// ```</span>
 <span class='doccomment'>/// # use whiteread::parse_string;</span>
-<span class='doccomment'>/// let number: i32 = parse_string(&quot; 123  foo&quot;).unwrap();</span>
+<span class='doccomment'>/// let number: i32 = parse_string(&quot; 123  &quot;).unwrap();</span>
 <span class='doccomment'>/// assert!(number == 123);</span>
 <span class='doccomment'>/// ```</span>
 <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>parse_string</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='ident'>s</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-    <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>s</span>.<span class='ident'>split_whitespace</span>())
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>stream</span> <span class='op'>=</span> <span class='ident'>s</span>.<span class='ident'>split_whitespace</span>();
+    <span class='kw'>let</span> <span class='ident'>value</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>stream</span>) );
+    
+    <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(_) <span class='op'>=</span> <span class='ident'>Iterator</span>::<span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>stream</span>) { <span class='prelude-val'>Err</span>(<span class='ident'>Leftovers</span>) }
+    <span class='kw'>else</span> { <span class='prelude-val'>Ok</span>(<span class='ident'>value</span>) }
 }
 
 <span class='comment'>// WhiteReader ------------------------------------------------------------------------------------------</span>
@@ -850,25 +922,26 @@
 <span class='doccomment'>/// </span>
 <span class='doccomment'>/// ```</span>
 <span class='doccomment'>/// # use whiteread::{WhiteReader,TooShort};</span>
-<span class='doccomment'>/// let data = std::io::Cursor::new(b&quot;1 2\n\n3 4 5\n6&quot; as &amp;[u8]);</span>
+<span class='doccomment'>/// let data = std::io::Cursor::new(b&quot;1 2\n\n3 4 5\n6 7\n8\n&quot; as &amp;[u8]);</span>
 <span class='doccomment'>/// let mut r = WhiteReader::new(data);</span>
-<span class='doccomment'>/// assert_eq!(r.get_line().unwrap().trim(), &quot;1 2&quot;);</span>
-<span class='doccomment'>/// assert_eq!(r.parse().ok(), Some(1u8));</span>
-<span class='doccomment'>/// assert_eq!(r.parse().ok(), Some( (2u8, 3u8) ));</span>
-<span class='doccomment'>/// assert_eq!(r.continue_line().ok(), Some(4u8));</span>
-<span class='doccomment'>/// assert_eq!(r.parse_line().ok(), Some(6u8));</span>
+<span class='doccomment'>/// assert_eq!(r.next_line().unwrap().trim(), &quot;1 2&quot;);</span>
+<span class='doccomment'>/// assert_eq!(r.parse().ok(), Some(1));</span>
+<span class='doccomment'>/// assert_eq!(r.parse().ok(), Some( (2, 3) ));   // continue_line would return `TooShort` here</span>
+<span class='doccomment'>/// assert_eq!(r.continue_line().ok(), Some(4)); // finish_line would return `Leftovers` here</span>
+<span class='doccomment'>/// assert_eq!(r.start_line().ok(), Some(6));   // line would return `Leftovers` here</span>
+<span class='doccomment'>/// assert_eq!(r.line().ok(), Some(8));</span>
 <span class='doccomment'>/// // from now, everything will return Err(TooShort)</span>
 <span class='doccomment'>/// # match r.parse::&lt;u8&gt;() {</span>
 <span class='doccomment'>/// #     Err(TooShort) =&gt; (),</span>
 <span class='doccomment'>/// #     _ =&gt; panic!()</span>
 <span class='doccomment'>/// # }</span>
 <span class='doccomment'>/// # </span>
-<span class='doccomment'>/// # match r.parse_line::&lt;u8&gt;() {</span>
+<span class='doccomment'>/// # match r.line::&lt;u8&gt;() {</span>
 <span class='doccomment'>/// #     Err(TooShort) =&gt; (),</span>
 <span class='doccomment'>/// #     _ =&gt; panic!()</span>
 <span class='doccomment'>/// # }</span>
 <span class='doccomment'>/// # </span>
-<span class='doccomment'>/// # match r.get_line() {</span>
+<span class='doccomment'>/// # match r.next_line() {</span>
 <span class='doccomment'>/// #     Err(TooShort) =&gt; (),</span>
 <span class='doccomment'>/// #     _ =&gt; panic!()</span>
 <span class='doccomment'>/// # }</span>
@@ -883,6 +956,7 @@
     <span class='ident'>words</span>: <span class='ident'>SplitWhitespace</span><span class='op'>&lt;</span><span class='lifetime'>&#39;static</span><span class='op'>&gt;</span>
 }
 
+<span class='doccomment'>/// # Constructors</span>
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>B</span>: <span class='ident'>BufRead</span><span class='op'>&gt;</span> <span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>B</span><span class='op'>&gt;</span> {
     <span class='doccomment'>/// Wraps a BufRead.</span>
     <span class='doccomment'>///</span>
@@ -890,7 +964,17 @@
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>buf</span>: <span class='ident'>B</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>B</span><span class='op'>&gt;</span> {
         <span class='ident'>WhiteReader</span> { <span class='ident'>buf</span>: <span class='ident'>buf</span>, <span class='ident'>line</span>: <span class='ident'>String</span>::<span class='ident'>new</span>(), <span class='ident'>words</span>: <span class='string'>&quot;&quot;</span>.<span class='ident'>split_whitespace</span>() }
     }
-    
+}
+
+<span class='doccomment'>/// # Parsing methods</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// Following methods parse some part of input into a White value.</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// # Errors</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// These methods may return `TooShort`, `ParseError` or `IoError` error variant.</span>
+<span class='doccomment'>/// If they return other variants too, it is stated explicitely.</span>
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>B</span>: <span class='ident'>BufRead</span><span class='op'>&gt;</span> <span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>B</span><span class='op'>&gt;</span> {
     <span class='doccomment'>/// Parses a White value without specialy treating newlines (just like `scanf` or `cin&gt;&gt;`)</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>parse</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
         <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='self'>self</span>)
@@ -902,6 +986,7 @@
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>p</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span> { <span class='self'>self</span>.<span class='ident'>parse</span>().<span class='ident'>unwrap</span>() }
     
     <span class='kw'>fn</span> <span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='prelude-ty'>Option</span><span class='op'>&lt;</span>()<span class='op'>&gt;&gt;</span> {
+        <span class='self'>self</span>.<span class='ident'>words</span> <span class='op'>=</span> <span class='string'>&quot;&quot;</span>.<span class='ident'>split_whitespace</span>(); <span class='comment'>// keep it safe in case of early returns</span>
         <span class='self'>self</span>.<span class='ident'>line</span>.<span class='ident'>clear</span>();
         <span class='kw'>let</span> <span class='ident'>n_bytes</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='self'>self</span>.<span class='ident'>buf</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>line</span>) );
         <span class='self'>self</span>.<span class='ident'>words</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>transmute</span>(<span class='self'>self</span>.<span class='ident'>line</span>.<span class='ident'>split_whitespace</span>()) };
@@ -909,30 +994,55 @@
         <span class='prelude-val'>Ok</span>(<span class='prelude-val'>Some</span>( () ))
     }
     
+    <span class='doccomment'>/// Reads a new line from input and parses it into White value **as a whole**.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// The function is called just `line` for brevity and also to</span>
+    <span class='doccomment'>/// make it look different than global `read_line` to avoid mistakes.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// # Errors</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// Additionaly to usual parse errors, this method may also return `Leftovers`.</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>line</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>None</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='self'>self</span>.<span class='ident'>read_line</span>() ) { <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>); };
+        <span class='self'>self</span>.<span class='ident'>finish_line</span>()
+    }
+    
+    <span class='doccomment'>/// Reads a new line from input and parses some part of it into White value.</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>start_line</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>None</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='self'>self</span>.<span class='ident'>read_line</span>() ) { <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>); };
+        <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>)
+    }
+    
+    <span class='doccomment'>/// Parses some part of current line into White value.</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>continue_line</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+        <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>)
+    }
+    
+    <span class='doccomment'>/// Parses remaining part of current line into White value.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// It could be used with `T=()`, to just check if we&#39;re on the end of line.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// # Errors</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// Additionaly to usual parse errors, this method may also return `Leftovers`.</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>finish_line</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+        <span class='kw'>let</span> <span class='ident'>value</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>) );
+        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(_) <span class='op'>=</span> <span class='ident'>Iterator</span>::<span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>) { <span class='prelude-val'>Err</span>(<span class='ident'>Leftovers</span>) }
+        <span class='kw'>else</span> { <span class='prelude-val'>Ok</span>(<span class='ident'>value</span>) }
+    }
+}
+
+<span class='doccomment'>/// # Additional methods</span>
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>B</span>: <span class='ident'>BufRead</span><span class='op'>&gt;</span> <span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>B</span><span class='op'>&gt;</span> {
     <span class='doccomment'>/// Reads a new line and returns it.</span>
     <span class='doccomment'>///</span>
-    <span class='doccomment'>/// This functions should be used when `parse`-like functions</span>
+    <span class='doccomment'>/// This function should be used when `parse`-like functions</span>
     <span class='doccomment'>/// are insufficient or just to get a preview of a line.</span>
     <span class='doccomment'>/// Note that line&#39;s content will not be considered consumed</span>
     <span class='doccomment'>/// and will be available for `parse` and `continue_line`.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;</span> {
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>next_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;</span> {
         <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>None</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='self'>self</span>.<span class='ident'>read_line</span>() ) { <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>); }
         <span class='prelude-val'>Ok</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>line</span>)
-    }
-    
-    <span class='doccomment'>/// Reads a new line from input and parses it into White value.</span>
-    <span class='doccomment'>///</span>
-    <span class='doccomment'>/// It&#39;s not an error when there are leftovers.</span>
-    <span class='doccomment'>/// They will be available to parse after.</span>
-    <span class='doccomment'>/// For more fine-grained control use `get_line`.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>parse_line</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>None</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='self'>self</span>.<span class='ident'>read_line</span>() ) { <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>); };
-        <span class='self'>self</span>.<span class='ident'>continue_line</span>()
-    }
-    
-    <span class='doccomment'>/// Parses remaining part of line into White value.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>continue_line</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-        <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>)
     }
     
     <span class='doccomment'>/// Gets underlying buffer back.</span>
