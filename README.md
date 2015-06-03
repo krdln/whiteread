@@ -20,6 +20,8 @@ doesn't hurt too much. But if you really want to force panics, we got you covere
 
 # [Documentation](http://krdln.github.io/whiteread/whiteread/index.html)
 
+# [Crate](https://crates.io/crates/whiteread)
+
 # Examples
 
 Reading an integer from stdin:
