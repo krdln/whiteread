@@ -458,6 +458,45 @@
 <span id="416">416</span>
 <span id="417">417</span>
 <span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
 </pre><pre class='rust '>
 <span class='comment'>// #![feature(zero_one)] // TODO see below</span>
 
@@ -521,10 +560,35 @@
 <span class='doccomment'>/// Implementations for primtives consume and parse one element from a stream</span>
 <span class='doccomment'>/// (advancing a stream).</span>
 <span class='doccomment'>/// Implementations for tuples just parse elements from left to right.</span>
-<span class='doccomment'>/// Tuples can be nested.</span>
 <span class='doccomment'>/// Implementation for vector parses till the end of stream.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// For example, see [`parse_string`](fn.parse_string.html);</span>
+<span class='doccomment'>/// # Examples</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// Using a trait directly</span>
+<span class='doccomment'>/// </span>
+<span class='doccomment'>/// ```</span>
+<span class='doccomment'>/// use whiteread::White;</span>
+<span class='doccomment'>/// let mut stream = &quot;123&quot;.split_whitespace();</span>
+<span class='doccomment'>/// assert_eq!(&lt;i32 as White&gt;::read(&amp;mut stream).unwrap(), 123)</span>
+<span class='doccomment'>/// ```</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// Semantics of provided trait implementations:</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// ```</span>
+<span class='doccomment'>/// # use whiteread::parse_string;</span>
+<span class='doccomment'>/// # use whiteread::Lengthed;</span>
+<span class='doccomment'>/// // tuples (up to 3)</span>
+<span class='doccomment'>/// assert_eq!(parse_string(&quot;2 1 3 4&quot;).ok(), Some( ((2, 1), (3, 4)) ));</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// // eager vector</span>
+<span class='doccomment'>/// assert_eq!(parse_string(&quot;2 1 3 4&quot;).ok(), Some( vec![2, 1, 3, 4] ));</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// // vec prefixed with length</span>
+<span class='doccomment'>/// assert_eq!(parse_string(&quot;2 1 3 4&quot;).ok(), Some( Lengthed(vec![1, 3]) ));</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// // you can mix impls of course</span>
+<span class='doccomment'>/// assert_eq!(parse_string(&quot;a 1 b 2&quot;).ok(), Some( vec![(&#39;a&#39;, 1), (&#39;b&#39;, 2)] ));</span>
+<span class='doccomment'>/// ```</span>
 <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>White</span>: <span class='ident'>Sized</span> {
     <span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>StrStream</span><span class='op'>&gt;</span>(<span class='ident'>it</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='kw'>Self</span><span class='op'>&gt;</span>;
 }
@@ -590,6 +654,7 @@
     <span class='doccomment'>/// If that description is confusing, check out [src].</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// # Examples</span>
+    <span class='doccomment'>///</span>
     <span class='doccomment'>/// Summing integers from a file with proper error handling.</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// ```no_run</span>
@@ -644,6 +709,13 @@
 <span class='macro'>white</span><span class='macro'>!</span>(<span class='ident'>f32</span>);
 <span class='macro'>white</span><span class='macro'>!</span>(<span class='ident'>f64</span>);
 
+<span class='kw'>impl</span> <span class='ident'>White</span> <span class='kw'>for</span> <span class='ident'>char</span> {
+	<span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>StrStream</span><span class='op'>&gt;</span>(<span class='ident'>it</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>char</span><span class='op'>&gt;</span> {
+		<span class='kw'>let</span> <span class='ident'>s</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>it</span>.<span class='ident'>next</span>() );
+		<span class='ident'>s</span>.<span class='ident'>and_then</span>( <span class='op'>|</span><span class='ident'>s</span><span class='op'>|</span> <span class='ident'>s</span>.<span class='ident'>chars</span>().<span class='ident'>next</span>() ).<span class='ident'>ok_or</span>(<span class='ident'>TooShort</span>)
+	}
+}
+
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span>, <span class='ident'>U</span>: <span class='ident'>White</span><span class='op'>&gt;</span> <span class='ident'>White</span> <span class='kw'>for</span> (<span class='ident'>T</span>, <span class='ident'>U</span>) {
     <span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>StrStream</span><span class='op'>&gt;</span>(<span class='ident'>it</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span>(<span class='ident'>T</span>, <span class='ident'>U</span>)<span class='op'>&gt;</span> {
         <span class='prelude-val'>Ok</span>( (<span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='ident'>it</span>) ), <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='ident'>it</span>) )) )
@@ -674,20 +746,20 @@
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// # Examples</span>
 <span class='doccomment'>/// ```</span>
-<span class='doccomment'>/// # use whiteread::{parse_string, Lenghted};</span>
-<span class='doccomment'>/// let Lenghted(v): Lenghted&lt;u8&gt; = parse_string(&quot;3 5 6 7 8 nine&quot;).unwrap();</span>
+<span class='doccomment'>/// # use whiteread::{parse_string, Lengthed};</span>
+<span class='doccomment'>/// let Lengthed(v): Lengthed&lt;u8&gt; = parse_string(&quot;3 5 6 7 8 nine&quot;).unwrap();</span>
 <span class='doccomment'>/// assert_eq!(v, &amp;[5, 6, 7]);</span>
 <span class='doccomment'>/// ```</span>
-<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>)]</span>
-<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Lenghted</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>(<span class='kw'>pub</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>);
+<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>, <span class='ident'>Eq</span>, <span class='ident'>PartialEq</span>)]</span>
+<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Lengthed</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>(<span class='kw'>pub</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>);
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span> <span class='ident'>White</span> <span class='kw'>for</span> <span class='ident'>Lenghted</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-    <span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>StrStream</span><span class='op'>&gt;</span>(<span class='ident'>it</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>Lenghted</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;&gt;</span> {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span> <span class='ident'>White</span> <span class='kw'>for</span> <span class='ident'>Lengthed</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>I</span>: <span class='ident'>StrStream</span><span class='op'>&gt;</span>(<span class='ident'>it</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>I</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>Lengthed</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>sz</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>White</span>::<span class='ident'>read</span>(<span class='ident'>it</span>));
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>v</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>with_capacity</span>(<span class='ident'>sz</span>);
         <span class='kw'>while</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>x</span>) <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>White</span>::<span class='ident'>read</span>(<span class='ident'>it</span>).<span class='ident'>ok_or_none</span>()) {
             <span class='ident'>v</span>.<span class='ident'>push</span>(<span class='ident'>x</span>);
-            <span class='kw'>if</span> <span class='ident'>v</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='ident'>sz</span> { <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>Lenghted</span>(<span class='ident'>v</span>)); }
+            <span class='kw'>if</span> <span class='ident'>v</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='ident'>sz</span> { <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>Lengthed</span>(<span class='ident'>v</span>)); }
         }
         <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>)
     }
@@ -735,8 +807,8 @@
 <span class='doccomment'>/// # Examples</span>
 <span class='doccomment'>/// ```</span>
 <span class='doccomment'>/// # use whiteread::parse_string;</span>
-<span class='doccomment'>/// let (hi, nums): (String, Vec&lt;u8&gt;) = parse_string(&quot; hi 1 2 3&quot;).unwrap();</span>
-<span class='doccomment'>/// assert!(hi == &quot;hi&quot; &amp;&amp; nums == &amp;[1,2,3]);</span>
+<span class='doccomment'>/// let number: i32 = parse_string(&quot; 123  foo&quot;).unwrap();</span>
+<span class='doccomment'>/// assert!(number == 123);</span>
 <span class='doccomment'>/// ```</span>
 <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>parse_string</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='ident'>s</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
     <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>s</span>.<span class='ident'>split_whitespace</span>())
@@ -751,7 +823,17 @@
 <span class='doccomment'>/// and also provides almost zero-allocation parsing.</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// # Examples</span>
-<span class='doccomment'>/// The following will accept both of the following inputs:</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// This code</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// ```no_run</span>
+<span class='doccomment'>/// # use whiteread::WhiteReader;</span>
+<span class='doccomment'>/// let i = std::io::stdin();</span>
+<span class='doccomment'>/// let mut i = WhiteReader::new(i.lock());</span>
+<span class='doccomment'>/// let (n, k): (i32, f64) = i.p();</span>
+<span class='doccomment'>/// ```</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// will accept both of following inputs:</span>
 <span class='doccomment'>///</span>
 <span class='doccomment'>/// ```text</span>
 <span class='doccomment'>/// 1</span>
@@ -763,11 +845,33 @@
 <span class='doccomment'>/// 1 2</span>
 <span class='doccomment'>/// ```</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// ```no_run</span>
-<span class='doccomment'>/// # use whiteread::WhiteReader;</span>
-<span class='doccomment'>/// let i = std::io::stdin();</span>
-<span class='doccomment'>/// let mut i = WhiteReader::new(i.lock());</span>
-<span class='doccomment'>/// let (n, k): (i32, f64) = i.p();</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// Overview of how various methods handle newlines:</span>
+<span class='doccomment'>/// </span>
+<span class='doccomment'>/// ```</span>
+<span class='doccomment'>/// # use whiteread::{WhiteReader,TooShort};</span>
+<span class='doccomment'>/// let data = std::io::Cursor::new(b&quot;1 2\n\n3 4 5\n6&quot; as &amp;[u8]);</span>
+<span class='doccomment'>/// let mut r = WhiteReader::new(data);</span>
+<span class='doccomment'>/// assert_eq!(r.get_line().unwrap().trim(), &quot;1 2&quot;);</span>
+<span class='doccomment'>/// assert_eq!(r.parse().ok(), Some(1u8));</span>
+<span class='doccomment'>/// assert_eq!(r.parse().ok(), Some( (2u8, 3u8) ));</span>
+<span class='doccomment'>/// assert_eq!(r.continue_line().ok(), Some(4u8));</span>
+<span class='doccomment'>/// assert_eq!(r.parse_line().ok(), Some(6u8));</span>
+<span class='doccomment'>/// // from now, everything will return Err(TooShort)</span>
+<span class='doccomment'>/// # match r.parse::&lt;u8&gt;() {</span>
+<span class='doccomment'>/// #     Err(TooShort) =&gt; (),</span>
+<span class='doccomment'>/// #     _ =&gt; panic!()</span>
+<span class='doccomment'>/// # }</span>
+<span class='doccomment'>/// # </span>
+<span class='doccomment'>/// # match r.parse_line::&lt;u8&gt;() {</span>
+<span class='doccomment'>/// #     Err(TooShort) =&gt; (),</span>
+<span class='doccomment'>/// #     _ =&gt; panic!()</span>
+<span class='doccomment'>/// # }</span>
+<span class='doccomment'>/// # </span>
+<span class='doccomment'>/// # match r.get_line() {</span>
+<span class='doccomment'>/// #     Err(TooShort) =&gt; (),</span>
+<span class='doccomment'>/// #     _ =&gt; panic!()</span>
+<span class='doccomment'>/// # }</span>
 <span class='doccomment'>/// ```</span>
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>B</span>: <span class='ident'>BufRead</span><span class='op'>&gt;</span> {
     <span class='ident'>buf</span>: <span class='ident'>B</span>,
@@ -849,32 +953,6 @@
             }
             <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>None</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='self'>self</span>.<span class='ident'>read_line</span>() ) { <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='prelude-val'>None</span>) };
         }
-    }
-}
-
-<span class='attribute'>#[<span class='ident'>test</span>]</span>
-<span class='kw'>fn</span> <span class='ident'>test_newline_handling</span>() {
-    <span class='kw'>let</span> <span class='ident'>data</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='string'>b&quot;1 2\n\n3 4 5\n6&quot;</span> <span class='kw'>as</span> <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]);
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>r</span> <span class='op'>=</span> <span class='ident'>WhiteReader</span>::<span class='ident'>new</span>(<span class='ident'>data</span>);
-    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>get_line</span>().<span class='ident'>unwrap</span>().<span class='ident'>trim</span>(), <span class='string'>&quot;1 2&quot;</span>);
-    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>1u8</span>));
-    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>( (<span class='number'>2u8</span>, <span class='number'>3u8</span>) ));
-    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>continue_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>4u8</span>));
-    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>6u8</span>));
-    
-    <span class='kw'>match</span> <span class='ident'>r</span>.<span class='ident'>parse</span>::<span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>() {
-        <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>) <span class='op'>=&gt;</span> (),
-        _ <span class='op'>=&gt;</span> <span class='macro'>panic</span><span class='macro'>!</span>()
-    }
-    
-    <span class='kw'>match</span> <span class='ident'>r</span>.<span class='ident'>parse_line</span>::<span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>() {
-        <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>) <span class='op'>=&gt;</span> (),
-        _ <span class='op'>=&gt;</span> <span class='macro'>panic</span><span class='macro'>!</span>()
-    }
-    
-    <span class='kw'>match</span> <span class='ident'>r</span>.<span class='ident'>get_line</span>() {
-        <span class='prelude-val'>Err</span>(<span class='ident'>TooShort</span>) <span class='op'>=&gt;</span> (),
-        _ <span class='op'>=&gt;</span> <span class='macro'>panic</span><span class='macro'>!</span>()
     }
 }
 </pre>

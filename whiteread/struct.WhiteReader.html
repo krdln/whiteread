@@ -45,7 +45,7 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-1301' class='srclink' href='../src/whiteread/lib.rs.html#311-319' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-1448' class='srclink' href='../src/whiteread/lib.rs.html#376-384' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct WhiteReader&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; {
     // some fields omitted
 }</pre><div class='docblock'><p>Wrapper for BufRead allowing easy parsing values from a Reader.</p>
@@ -56,7 +56,14 @@ and also provides almost zero-allocation parsing.</p>
 
 <h1 id="examples" class='section-header'><a
                            href="#examples">Examples</a></h1>
-<p>The following will accept both of the following inputs:</p>
+<p>This code</p>
+<pre id='rust-example-rendered' class='rust '>
+<span class='kw'>let</span> <span class='ident'>i</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>stdin</span>();
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>i</span> <span class='op'>=</span> <span class='ident'>WhiteReader</span>::<span class='ident'>new</span>(<span class='ident'>i</span>.<span class='ident'>lock</span>());
+<span class='kw'>let</span> (<span class='ident'>n</span>, <span class='ident'>k</span>): (<span class='ident'>i32</span>, <span class='ident'>f64</span>) <span class='op'>=</span> <span class='ident'>i</span>.<span class='ident'>p</span>();
+</pre>
+
+<p>will accept both of following inputs:</p>
 
 <pre><code class="language-text">1
 
@@ -65,10 +72,17 @@ and also provides almost zero-allocation parsing.</p>
 
 <pre><code class="language-text">1 2
 </code></pre>
+
+<p>Overview of how various methods handle newlines:</p>
 <pre id='rust-example-rendered' class='rust '>
-<span class='kw'>let</span> <span class='ident'>i</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>stdin</span>();
-<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>i</span> <span class='op'>=</span> <span class='ident'>WhiteReader</span>::<span class='ident'>new</span>(<span class='ident'>i</span>.<span class='ident'>lock</span>());
-<span class='kw'>let</span> (<span class='ident'>n</span>, <span class='ident'>k</span>): (<span class='ident'>i32</span>, <span class='ident'>f64</span>) <span class='op'>=</span> <span class='ident'>i</span>.<span class='ident'>p</span>();
+<span class='kw'>let</span> <span class='ident'>data</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='string'>b&quot;1 2\n\n3 4 5\n6&quot;</span> <span class='kw'>as</span> <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]);
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>r</span> <span class='op'>=</span> <span class='ident'>WhiteReader</span>::<span class='ident'>new</span>(<span class='ident'>data</span>);
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>get_line</span>().<span class='ident'>unwrap</span>().<span class='ident'>trim</span>(), <span class='string'>&quot;1 2&quot;</span>);
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>1u8</span>));
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>( (<span class='number'>2u8</span>, <span class='number'>3u8</span>) ));
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>continue_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>4u8</span>));
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>r</span>.<span class='ident'>parse_line</span>().<span class='ident'>ok</span>(), <span class='prelude-val'>Some</span>(<span class='number'>6u8</span>));
+<span class='comment'>// from now, everything will return Err(TooShort)</span>
 </pre>
 </div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h3><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>(buf: B) -&gt; <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></h4>
 <div class='docblock'><p>Wraps a BufRead.</p>
