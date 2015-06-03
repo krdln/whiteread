@@ -33,7 +33,7 @@ let x: i32 = parse_line().unwrap();
 Tuples and vectors (nest everything as you like)!
 
 ```rust
-let tup: (i32, f64) = parse_string("  5  3.14  leftovers are ignored");
+let tup: (i32, f64) = parse_string("  5  3.14 ");
 let v: Vec<(String, u8)> = parse_string("one 1 two 2 three 3");
 ```
 
@@ -50,7 +50,7 @@ let (a, b): (i32, i32) = i.parse().unwrap();
 ...or just for speed:
 
 ```rust
-while let Ok((x, y)) = i.parse_line::<(uint, f32)>() {
+while let Ok((x, y)) = i.line::<(uint, f32)>() {
 	println!("{} {}", y, x);
 }
 ```

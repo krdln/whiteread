@@ -84,7 +84,7 @@ impl<'a> StrStream for SplitWhitespace<'a> {
 /// assert_eq!(parse_string("2 1 3 4").ok(), Some( vec![2, 1, 3, 4] ));
 ///
 /// // vec prefixed with length
-/// assert_eq!(parse_string("2 1 3 4").ok(), Some( Lengthed(vec![1, 3]) ));
+/// assert_eq!(parse_string("2 1 3").ok(), Some( Lengthed(vec![1, 3]) ));
 ///
 /// // you can mix impls of course
 /// assert_eq!(parse_string("a 1 b 2").ok(), Some( vec![('a', 1), ('b', 2)] ));
@@ -98,10 +98,22 @@ pub type WhiteResult<T> = Result<T, WhiteError>;
 /// Error which can occur while parsing `White` object.
 ///
 /// It's convertible into `io::Error`, so it composes well with other reading functions.
+///
+/// # Examples
+///
+/// ```
+/// # use whiteread::{parse_string, TooShort, Leftovers, ParseError};
+/// if let Err(TooShort) = parse_string::<(u8, u16)>("1") {} else { panic!(); }
+/// if let Err(Leftovers) = parse_string::<char>("x y z") {} else { panic!(); }
+/// if let Err(ParseError) = parse_string::<i32>("seven") {} else { panic!(); }
+/// ```
 #[derive(Debug)]
 pub enum WhiteError {
     /// There was not enough input to parse a value.
     TooShort,
+    
+    /// Excessive input was provided.
+    Leftovers,
     
     /// Parse error occured (data was in invalid format).
     ParseError,
@@ -120,6 +132,7 @@ impl std::error::Error for WhiteError {
     fn description(&self) -> &str {
         match *self {
             TooShort => "not enough input to parse a value",
+            Leftovers => "excessive input provided",
             ParseError => "parse error occured",
             IoError(ref e) => e.description()
         }
@@ -210,10 +223,10 @@ white!(f32);
 white!(f64);
 
 impl White for char {
-	fn read<I: StrStream>(it: &mut I) -> WhiteResult<char> {
-		let s = try!( it.next() );
-		s.and_then( |s| s.chars().next() ).ok_or(TooShort)
-	}
+    fn read<I: StrStream>(it: &mut I) -> WhiteResult<char> {
+        let s = try!( it.next() );
+        s.and_then( |s| s.chars().next() ).ok_or(TooShort)
+    }
 }
 
 impl<T: White, U: White> White for (T, U) {
@@ -247,7 +260,7 @@ impl<T: White> White for Vec<T> {
 /// # Examples
 /// ```
 /// # use whiteread::{parse_string, Lengthed};
-/// let Lengthed(v): Lengthed<u8> = parse_string("3 5 6 7 8 nine").unwrap();
+/// let Lengthed(v): Lengthed<u8> = parse_string("3 5 6 7").unwrap();
 /// assert_eq!(v, &[5, 6, 7]);
 /// ```
 #[derive(Debug, Eq, PartialEq)]
@@ -285,7 +298,7 @@ impl<T: White> White for Lengthed<T> {
 
 /// Helper function for parsing `White` value from one line of stdin.
 ///
-/// Leftovers are discarded.
+/// Leftovers are considered an error.
 /// This function locks a mutex and allocates a buffer, so
 /// don't use it when reading more than few lines –
 /// use [`WhiteReader`](struct.WhiteReader.html) instead.
@@ -302,16 +315,20 @@ pub fn parse_line<T: White>() -> WhiteResult<T> {
     parse_string(&line)
 }
 
-/// Helper function for parsing `White` value from string. Leftovers are discarded.
+/// Helper function for parsing `White` value from string. Leftovers are considered an error.
 ///
 /// # Examples
 /// ```
 /// # use whiteread::parse_string;
-/// let number: i32 = parse_string(" 123  foo").unwrap();
+/// let number: i32 = parse_string(" 123  ").unwrap();
 /// assert!(number == 123);
 /// ```
 pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
-    White::read(&mut s.split_whitespace())
+    let mut stream = s.split_whitespace();
+    let value = try!( White::read(&mut stream) );
+    
+    if let Some(_) = Iterator::next(&mut stream) { Err(Leftovers) }
+    else { Ok(value) }
 }
 
 // WhiteReader ------------------------------------------------------------------------------------------
@@ -350,25 +367,26 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 /// 
 /// ```
 /// # use whiteread::{WhiteReader,TooShort};
-/// let data = std::io::Cursor::new(b"1 2\n\n3 4 5\n6" as &[u8]);
+/// let data = std::io::Cursor::new(b"1 2\n\n3 4 5\n6 7\n8\n" as &[u8]);
 /// let mut r = WhiteReader::new(data);
-/// assert_eq!(r.get_line().unwrap().trim(), "1 2");
-/// assert_eq!(r.parse().ok(), Some(1u8));
-/// assert_eq!(r.parse().ok(), Some( (2u8, 3u8) ));
-/// assert_eq!(r.continue_line().ok(), Some(4u8));
-/// assert_eq!(r.parse_line().ok(), Some(6u8));
+/// assert_eq!(r.next_line().unwrap().trim(), "1 2");
+/// assert_eq!(r.parse().ok(), Some(1));
+/// assert_eq!(r.parse().ok(), Some( (2, 3) ));   // continue_line would return `TooShort` here
+/// assert_eq!(r.continue_line().ok(), Some(4)); // finish_line would return `Leftovers` here
+/// assert_eq!(r.start_line().ok(), Some(6));   // line would return `Leftovers` here
+/// assert_eq!(r.line().ok(), Some(8));
 /// // from now, everything will return Err(TooShort)
 /// # match r.parse::<u8>() {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
 /// # }
 /// # 
-/// # match r.parse_line::<u8>() {
+/// # match r.line::<u8>() {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
 /// # }
 /// # 
-/// # match r.get_line() {
+/// # match r.next_line() {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
 /// # }
@@ -383,6 +401,7 @@ pub struct WhiteReader<B: BufRead> {
     words: SplitWhitespace<'static>
 }
 
+/// # Constructors
 impl<B: BufRead> WhiteReader<B> {
     /// Wraps a BufRead.
     ///
@@ -390,7 +409,17 @@ impl<B: BufRead> WhiteReader<B> {
     pub fn new(buf: B) -> WhiteReader<B> {
         WhiteReader { buf: buf, line: String::new(), words: "".split_whitespace() }
     }
-    
+}
+
+/// # Parsing methods
+///
+/// Following methods parse some part of input into a White value.
+///
+/// # Errors
+///
+/// These methods may return `TooShort`, `ParseError` or `IoError` error variant.
+/// If they return other variants too, it is stated explicitely.
+impl<B: BufRead> WhiteReader<B> {
     /// Parses a White value without specialy treating newlines (just like `scanf` or `cin>>`)
     pub fn parse<T: White>(&mut self) -> WhiteResult<T> {
         White::read(self)
@@ -402,6 +431,7 @@ impl<B: BufRead> WhiteReader<B> {
     pub fn p<T: White>(&mut self) -> T { self.parse().unwrap() }
     
     fn read_line(&mut self) -> io::Result<Option<()>> {
+        self.words = "".split_whitespace(); // keep it safe in case of early returns
         self.line.clear();
         let n_bytes = try!( self.buf.read_line(&mut self.line) );
         self.words = unsafe { transmute(self.line.split_whitespace()) };
@@ -409,30 +439,55 @@ impl<B: BufRead> WhiteReader<B> {
         Ok(Some( () ))
     }
     
+    /// Reads a new line from input and parses it into White value **as a whole**.
+    ///
+    /// The function is called just `line` for brevity and also to
+    /// make it look different than global `read_line` to avoid mistakes.
+    ///
+    /// # Errors
+    ///
+    /// Additionaly to usual parse errors, this method may also return `Leftovers`.
+    pub fn line<T: White>(&mut self) -> WhiteResult<T> {
+        if let None = try!( self.read_line() ) { return Err(TooShort); };
+        self.finish_line()
+    }
+    
+    /// Reads a new line from input and parses some part of it into White value.
+    pub fn start_line<T: White>(&mut self) -> WhiteResult<T> {
+        if let None = try!( self.read_line() ) { return Err(TooShort); };
+        White::read(&mut self.words)
+    }
+    
+    /// Parses some part of current line into White value.
+    pub fn continue_line<T: White>(&mut self) -> WhiteResult<T> {
+        White::read(&mut self.words)
+    }
+    
+    /// Parses remaining part of current line into White value.
+    ///
+    /// It could be used with `T=()`, to just check if we're on the end of line.
+    ///
+    /// # Errors
+    ///
+    /// Additionaly to usual parse errors, this method may also return `Leftovers`.
+    pub fn finish_line<T: White>(&mut self) -> WhiteResult<T> {
+        let value = try!( White::read(&mut self.words) );
+        if let Some(_) = Iterator::next(&mut self.words) { Err(Leftovers) }
+        else { Ok(value) }
+    }
+}
+
+/// # Additional methods
+impl<B: BufRead> WhiteReader<B> {
     /// Reads a new line and returns it.
     ///
-    /// This functions should be used when `parse`-like functions
+    /// This function should be used when `parse`-like functions
     /// are insufficient or just to get a preview of a line.
     /// Note that line's content will not be considered consumed
     /// and will be available for `parse` and `continue_line`.
-    pub fn get_line(&mut self) -> WhiteResult<&str> {
+    pub fn next_line(&mut self) -> WhiteResult<&str> {
         if let None = try!( self.read_line() ) { return Err(TooShort); }
         Ok(&self.line)
-    }
-    
-    /// Reads a new line from input and parses it into White value.
-    ///
-    /// It's not an error when there are leftovers.
-    /// They will be available to parse after.
-    /// For more fine-grained control use `get_line`.
-    pub fn parse_line<T: White>(&mut self) -> WhiteResult<T> {
-        if let None = try!( self.read_line() ) { return Err(TooShort); };
-        self.continue_line()
-    }
-    
-    /// Parses remaining part of line into White value.
-    pub fn continue_line<T: White>(&mut self) -> WhiteResult<T> {
-        White::read(&mut self.words)
     }
     
     /// Gets underlying buffer back.

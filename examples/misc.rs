@@ -28,7 +28,7 @@ fn main() {
 	let i = std::io::stdin();
 	let mut i = WhiteReader::new(i.lock());
 	
-	while let Ok((x, y)) = i.parse_line::<(f32, f32)>() {
+	while let Ok((x, y)) = i.line::<(f32, f32)>() {
 		println!("{} * {} = {}", x, y, x*y);
 	}
 	

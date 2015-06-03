@@ -1,12 +1,9 @@
 [package]
 name = "whiteread"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Michał Krasnoborski <mkrdln@gmail.com>"]
 
-description = """\
-	Crate for easily reading whitespace-separated values from strings or input. \
-	It was made to mimic `cin >>` functionality \
-	and to be usable for parsing text input in format commonly used in algorithmic contests."""
+description = "Crate for easily reading whitespace-separated values from strings or input."
 
 documentation = "http://krdln.github.io/whiteread/whiteread/index.html"
 homepage = "https://github.com/krdln/whiteread"
