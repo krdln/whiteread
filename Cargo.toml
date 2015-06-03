@@ -12,5 +12,5 @@ documentation = "http://krdln.github.io/whiteread/whiteread/index.html"
 homepage = "https://github.com/krdln/whiteread"
 repository = "https://github.com/krdln/whiteread"
 readme = "README.md"
-keywords = ["read", "scan", "parse", "input", "scanf", "cin", "whitespace"]
+keywords = ["read", "parse", "input", "scanf", "whitespace"]
 license = "MIT"
