@@ -38,6 +38,8 @@
 //! If you want better error handling in while-let loops,
 //! use [`ok_or_none`](trait.WhiteResultExt.html#tymethod.ok_or_none)
 
+use std::path::Path;
+use std::fs::File;
 use std::io::{self, BufRead};
 use std::str::SplitWhitespace;
 
@@ -457,6 +459,25 @@ impl<B: BufRead> WhiteReader<B> {
     pub fn new(buf: B) -> WhiteReader<B> {
         WhiteReader { buf: buf, line: String::new(), words: "".split_ascii_whitespace() }
     }
+}
+    
+/// Opens a file, and wraps in WhiteReader
+///
+/// Shortcut for creating a file, wrapping it in a BufReader and then in a WhiteReader.
+/// This should be a static method on WhiteReader, but currently it's
+/// impossible to implement it that way (it requires equality constraints in where clauses).
+///
+/// # Examples
+///
+/// Read an integer from a file.
+///
+/// ```no_run
+/// # use whiteread::open;
+/// let x: u32 = open("number.txt").unwrap().parse().unwrap();
+/// ```
+pub fn open<P: AsRef<Path>>(path: P) -> io::Result<WhiteReader<io::BufReader<File>>> {
+	let file = try!( File::open(path) );
+	Ok( WhiteReader::new(io::BufReader::new(file)) )
 }
 
 /// # Parsing methods
