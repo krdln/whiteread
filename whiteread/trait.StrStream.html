@@ -45,7 +45,7 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-9' class='srclink' href='../src/whiteread/lib.rs.html#46-48' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-10' class='srclink' href='../src/whiteread/lib.rs.html#47-49' title='goto source code'>[src]</a></span></h1>
 <pre class='rust trait'>pub trait StrStream {
     fn <a href='#tymethod.next' class='fnname'>next</a>(&amp;mut self) -&gt; <a class='type' href='http://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='http://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a href='http://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;&gt;;
 }</pre><div class='docblock'><p>A streaming iterator yielding borrowed strings.</p>
@@ -56,6 +56,7 @@
         <h2 id='implementors'>Implementors</h2>
         <ul class='item-list' id='implementors-list'>
     <li><code>impl&lt;'a&gt; <a class='trait' href='../whiteread/trait.StrStream.html' title='whiteread::StrStream'>StrStream</a> for <a class='struct' href='http://doc.rust-lang.org/nightly/rustc_unicode/u_str/struct.SplitWhitespace.html' title='rustc_unicode::u_str::SplitWhitespace'>SplitWhitespace</a>&lt;'a&gt;</code></li>
+<li><code>impl&lt;'a&gt; <a class='trait' href='../whiteread/trait.StrStream.html' title='whiteread::StrStream'>StrStream</a> for <a class='struct' href='../whiteread/struct.SplitAsciiWhitespace.html' title='whiteread::SplitAsciiWhitespace'>SplitAsciiWhitespace</a>&lt;'a&gt;</code></li>
 <li><code>impl&lt;B: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt; <a class='trait' href='../whiteread/trait.StrStream.html' title='whiteread::StrStream'>StrStream</a> for <a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;B&gt;</code></li>
 </ul><script type="text/javascript" async
                               src="../implementors/whiteread/trait.StrStream.js">

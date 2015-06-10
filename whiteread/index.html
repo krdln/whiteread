@@ -45,7 +45,7 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-0' class='srclink' href='../src/whiteread/lib.rs.html#3-512' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-0' class='srclink' href='../src/whiteread/lib.rs.html#3-578' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>Crate for reading whitespace-separated values.</p>
 
 <p>The crate defines a trait <a href="trait.White.html"><code>White</code>`White`</a>, which
@@ -89,6 +89,15 @@ use <a href="trait.WhiteResultExt.html#tymethod.ok_or_none"><code>ok_or_none</co
                     </tr>
                 
                     <tr class=' module-item'>
+                        <td><a class='struct' href='struct.SplitAsciiWhitespace.html'
+                               title='whiteread::SplitAsciiWhitespace'>SplitAsciiWhitespace</a></td>
+                        <td class='docblock short'>
+                             <p>Fast version of std::str::SplitWhitespace, but with some drawbacks.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
                         <td><a class='struct' href='struct.WhiteReader.html'
                                title='whiteread::WhiteReader'>WhiteReader</a></td>
                         <td class='docblock short'>
@@ -108,6 +117,14 @@ use <a href="trait.WhiteResultExt.html#tymethod.ok_or_none"><code>ok_or_none</co
                     </tr>
                 </table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
 <table>
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.StrExt.html'
+                               title='whiteread::StrExt'>StrExt</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
                     <tr class=' module-item'>
                         <td><a class='trait' href='trait.StrStream.html'
                                title='whiteread::StrStream'>StrStream</a></td>
@@ -136,6 +153,15 @@ use <a href="trait.WhiteResultExt.html#tymethod.ok_or_none"><code>ok_or_none</co
                     </tr>
                 </table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table>
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.open.html'
+                               title='whiteread::open'>open</a></td>
+                        <td class='docblock short'>
+                             <p>Opens a file, and wraps in WhiteReader</p>
+
+                        </td>
+                    </tr>
+                
                     <tr class=' module-item'>
                         <td><a class='fn' href='fn.parse_line.html'
                                title='whiteread::parse_line'>parse_line</a></td>

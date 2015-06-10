@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `WhiteResult` type in crate `whiteread`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, WhiteResult">
+    <meta name="description" content="API documentation for the Rust `open` fn in crate `whiteread`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, open">
 
-    <title>whiteread::WhiteResult - Rust</title>
+    <title>whiteread::open - Rust</title>
 
     <link rel="stylesheet" type="text/css" href="../main.css">
 
@@ -26,7 +26,7 @@
 
     <section class="sidebar">
         
-        <p class='location'><a href='index.html'>whiteread</a></p><script>window.sidebarCurrent = {name: 'WhiteResult', ty: 'type', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+        <p class='location'><a href='index.html'>whiteread</a></p><script>window.sidebarCurrent = {name: 'open', ty: 'fn', relpath: ''};</script><script defer src="sidebar-items.js"></script>
     </section>
 
     <nav class="sub">
@@ -40,13 +40,25 @@
         </form>
     </nav>
 
-    <section id='main' class="content type">
-<h1 class='fqn'><span class='in-band'><a href='index.html'>whiteread</a>::<wbr><a class='type' href=''>WhiteResult</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content fn">
+<h1 class='fqn'><span class='in-band'>Function <a href='index.html'>whiteread</a>::<wbr><a class='fn' href=''>open</a></span><span class='out-of-band'><span id='render-detail'>
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-202' class='srclink' href='../src/whiteread/lib.rs.html#138' title='goto source code'>[src]</a></span></h1>
-<pre class='rust typedef'>type WhiteResult&lt;T&gt; = <a class='enum' href='http://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;T, <a class='enum' href='../whiteread/enum.WhiteError.html' title='whiteread::WhiteError'>WhiteError</a>&gt;;</pre></section>
+        </span><a id='src-1713' class='srclink' href='../src/whiteread/lib.rs.html#478-481' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn open&lt;P: <a class='trait' href='http://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='http://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a>&gt;&gt;(path: P) -&gt; <a class='type' href='http://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../whiteread/struct.WhiteReader.html' title='whiteread::WhiteReader'>WhiteReader</a>&lt;<a class='struct' href='http://doc.rust-lang.org/nightly/std/io/buffered/struct.BufReader.html' title='std::io::buffered::BufReader'>BufReader</a>&lt;<a class='struct' href='http://doc.rust-lang.org/nightly/std/fs/struct.File.html' title='std::fs::File'>File</a>&gt;&gt;&gt;</pre><div class='docblock'><p>Opens a file, and wraps in WhiteReader</p>
+
+<p>Shortcut for creating a file, wrapping it in a BufReader and then in a WhiteReader.
+This should be a static method on WhiteReader, but currently it&#39;s
+impossible to implement it that way (it requires equality constraints in where clauses).</p>
+
+<h1 id="examples" class='section-header'><a
+                           href="#examples">Examples</a></h1>
+<p>Read an integer from a file.</p>
+<pre id='rust-example-rendered' class='rust '>
+<span class='kw'>let</span> <span class='ident'>x</span>: <span class='ident'>u32</span> <span class='op'>=</span> <span class='ident'>open</span>(<span class='string'>&quot;number.txt&quot;</span>).<span class='ident'>unwrap</span>().<span class='ident'>parse</span>().<span class='ident'>unwrap</span>();
+</pre>
+</div></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>

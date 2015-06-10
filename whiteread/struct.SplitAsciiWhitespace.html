@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `WhiteResult` type in crate `whiteread`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, WhiteResult">
+    <meta name="description" content="API documentation for the Rust `SplitAsciiWhitespace` struct in crate `whiteread`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, SplitAsciiWhitespace">
 
-    <title>whiteread::WhiteResult - Rust</title>
+    <title>whiteread::SplitAsciiWhitespace - Rust</title>
 
     <link rel="stylesheet" type="text/css" href="../main.css">
 
@@ -26,7 +26,7 @@
 
     <section class="sidebar">
         
-        <p class='location'><a href='index.html'>whiteread</a></p><script>window.sidebarCurrent = {name: 'WhiteResult', ty: 'type', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+        <p class='location'><a href='index.html'>whiteread</a></p><script>window.sidebarCurrent = {name: 'SplitAsciiWhitespace', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
     </section>
 
     <nav class="sub">
@@ -40,13 +40,22 @@
         </form>
     </nav>
 
-    <section id='main' class="content type">
-<h1 class='fqn'><span class='in-band'><a href='index.html'>whiteread</a>::<wbr><a class='type' href=''>WhiteResult</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>whiteread</a>::<wbr><a class='struct' href=''>SplitAsciiWhitespace</a></span><span class='out-of-band'><span id='render-detail'>
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-202' class='srclink' href='../src/whiteread/lib.rs.html#138' title='goto source code'>[src]</a></span></h1>
-<pre class='rust typedef'>type WhiteResult&lt;T&gt; = <a class='enum' href='http://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;T, <a class='enum' href='../whiteread/enum.WhiteError.html' title='whiteread::WhiteError'>WhiteError</a>&gt;;</pre></section>
+        </span><a id='src-42' class='srclink' href='../src/whiteread/lib.rs.html#63-65' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct SplitAsciiWhitespace&lt;'a&gt; {
+    // some fields omitted
+}</pre><div class='docblock'><p>Fast version of std::str::SplitWhitespace, but with some drawbacks.</p>
+
+<p>It considers to be whitespace everything with codepoint &lt;= 0x20
+(this includes &quot; \t\n\r&quot;, but also some other unprintable characters).
+It doesn&#39;t consider to be whitespace any of non-ascii UTF whitespace characters
+(such as non-breaking space).</p>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl&lt;'a&gt; <a class='trait' href='../whiteread/trait.StrStream.html' title='whiteread::StrStream'>StrStream</a> for <a class='struct' href='../whiteread/struct.SplitAsciiWhitespace.html' title='whiteread::SplitAsciiWhitespace'>SplitAsciiWhitespace</a>&lt;'a&gt;</code></h3><div class='impl-items'><h4 id='method.next' class='method'><code>fn <a href='../whiteread/trait.StrStream.html#method.next' class='fnname'>next</a>(&amp;mut self) -&gt; <a class='type' href='http://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='http://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a href='http://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;&gt;</code></h4>
+</div></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>

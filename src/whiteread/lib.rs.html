@@ -552,6 +552,72 @@
 <span id="510">510</span>
 <span id="511">511</span>
 <span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
 </pre><pre class='rust '>
 <span class='comment'>// #![feature(zero_one)] // TODO see below</span>
 
@@ -593,9 +659,10 @@
 <span class='doccomment'>//! If you want better error handling in while-let loops,</span>
 <span class='doccomment'>//! use [`ok_or_none`](trait.WhiteResultExt.html#tymethod.ok_or_none)</span>
 
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>path</span>::<span class='ident'>Path</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fs</span>::<span class='ident'>File</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='self'>self</span>, <span class='ident'>BufRead</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>str</span>::<span class='ident'>SplitWhitespace</span>;
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>mem</span>::<span class='ident'>transmute</span>;
 
 <span class='doccomment'>/// A streaming iterator yielding borrowed strings.</span>
 <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>StrStream</span> {
@@ -606,6 +673,47 @@
     <span class='kw'>fn</span> <span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;&gt;</span> {
         <span class='prelude-val'>Ok</span>( <span class='ident'>Iterator</span>::<span class='ident'>next</span>(<span class='self'>self</span>) )
     }
+}
+
+<span class='doccomment'>/// Fast version of std::str::SplitWhitespace, but with some drawbacks.</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// It considers to be whitespace everything with codepoint &lt;= 0x20</span>
+<span class='doccomment'>/// (this includes &quot; \t\n\r&quot;, but also some other unprintable characters).</span>
+<span class='doccomment'>/// It doesn&#39;t consider to be whitespace any of non-ascii UTF whitespace characters</span>
+<span class='doccomment'>/// (such as non-breaking space).</span>
+<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>SplitAsciiWhitespace</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
+	<span class='ident'>s</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>
+}
+
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>StrStream</span> <span class='kw'>for</span> <span class='ident'>SplitAsciiWhitespace</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
+	<span class='kw'>fn</span> <span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;&gt;</span> {
+		<span class='kw'>let</span> <span class='ident'>bytes</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>s</span>.<span class='ident'>as_bytes</span>();
+		<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>start</span> <span class='op'>=</span> <span class='number'>0</span>;
+		<span class='kw'>while</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='kw-2'>&amp;</span><span class='ident'>c</span>) <span class='op'>=</span> <span class='ident'>bytes</span>.<span class='ident'>get</span>(<span class='ident'>start</span>) {
+			<span class='kw'>if</span> <span class='ident'>c</span> <span class='op'>&gt;</span> <span class='string'>b&#39; &#39;</span> { <span class='kw'>break</span>; }
+			<span class='ident'>start</span> <span class='op'>+=</span> <span class='number'>1</span>;
+		}
+		<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>end</span> <span class='op'>=</span> <span class='ident'>start</span>;
+		<span class='kw'>while</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='kw-2'>&amp;</span><span class='ident'>c</span>) <span class='op'>=</span> <span class='ident'>bytes</span>.<span class='ident'>get</span>(<span class='ident'>end</span>) {
+			<span class='kw'>if</span> <span class='ident'>c</span> <span class='op'>&lt;=</span> <span class='string'>b&#39; &#39;</span> { <span class='kw'>break</span>; }
+			<span class='ident'>end</span> <span class='op'>+=</span> <span class='number'>1</span>;
+		}
+		<span class='kw'>let</span> <span class='ident'>ret</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='ident'>start</span> <span class='op'>!=</span> <span class='ident'>end</span> {
+			<span class='prelude-val'>Ok</span>(<span class='prelude-val'>Some</span>( <span class='kw'>unsafe</span> { <span class='self'>self</span>.<span class='ident'>s</span>.<span class='ident'>slice_unchecked</span>(<span class='ident'>start</span>, <span class='ident'>end</span>) } ))
+		} <span class='kw'>else</span> {
+			<span class='prelude-val'>Ok</span>(<span class='prelude-val'>None</span>)
+		};
+		<span class='self'>self</span>.<span class='ident'>s</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='self'>self</span>.<span class='ident'>s</span>.<span class='ident'>slice_unchecked</span>(<span class='ident'>end</span>, <span class='ident'>bytes</span>.<span class='ident'>len</span>()) };
+		<span class='ident'>ret</span>
+	}
+}
+
+<span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>StrExt</span> {
+	<span class='kw'>fn</span> <span class='ident'>split_ascii_whitespace</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>SplitAsciiWhitespace</span>;
+}
+
+<span class='kw'>impl</span> <span class='ident'>StrExt</span> <span class='kw'>for</span> <span class='ident'>str</span> {
+	<span class='kw'>fn</span> <span class='ident'>split_ascii_whitespace</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>SplitAsciiWhitespace</span> { <span class='ident'>SplitAsciiWhitespace</span> { <span class='ident'>s</span>: <span class='self'>self</span> } }
 }
 
 <span class='comment'>// White trait ------------------------------------------------------------------------------------------</span>
@@ -879,10 +987,10 @@
 <span class='doccomment'>/// assert!(number == 123);</span>
 <span class='doccomment'>/// ```</span>
 <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>parse_string</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='ident'>s</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>stream</span> <span class='op'>=</span> <span class='ident'>s</span>.<span class='ident'>split_whitespace</span>();
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>stream</span> <span class='op'>=</span> <span class='ident'>SplitAsciiWhitespace</span> { <span class='ident'>s</span>: <span class='ident'>s</span> };
     <span class='kw'>let</span> <span class='ident'>value</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>stream</span>) );
     
-    <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(_) <span class='op'>=</span> <span class='ident'>Iterator</span>::<span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>stream</span>) { <span class='prelude-val'>Err</span>(<span class='ident'>Leftovers</span>) }
+    <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Ok</span>(<span class='prelude-val'>Some</span>(_)) <span class='op'>=</span> <span class='ident'>StrStream</span>::<span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>stream</span>) { <span class='prelude-val'>Err</span>(<span class='ident'>Leftovers</span>) }
     <span class='kw'>else</span> { <span class='prelude-val'>Ok</span>(<span class='ident'>value</span>) }
 }
 
@@ -953,7 +1061,15 @@
     <span class='comment'>// We use &#39;static lifetime here, but it actually points into line&#39;s buffer.</span>
     <span class='comment'>// We manualy check that after each mutation of line,</span>
     <span class='comment'>// words are immediately updated.</span>
-    <span class='ident'>words</span>: <span class='ident'>SplitWhitespace</span><span class='op'>&lt;</span><span class='lifetime'>&#39;static</span><span class='op'>&gt;</span>
+    <span class='ident'>words</span>: <span class='ident'>SplitAsciiWhitespace</span><span class='op'>&lt;</span><span class='lifetime'>&#39;static</span><span class='op'>&gt;</span>
+}
+
+<span class='kw'>unsafe</span> <span class='kw'>fn</span> <span class='ident'>statify_mut</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>x</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>T</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> <span class='kw-2'>mut</span> <span class='ident'>T</span> {
+	<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='op'>*</span>(<span class='ident'>x</span> <span class='kw'>as</span> <span class='op'>*</span><span class='kw-2'>mut</span> _)
+}
+
+<span class='kw'>unsafe</span> <span class='kw'>fn</span> <span class='ident'>statify</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>x</span>: <span class='kw-2'>&amp;</span><span class='ident'>T</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> <span class='ident'>T</span> {
+	<span class='kw-2'>&amp;</span><span class='op'>*</span>(<span class='ident'>x</span> <span class='kw'>as</span> <span class='op'>*</span><span class='kw'>const</span> _)
 }
 
 <span class='doccomment'>/// # Constructors</span>
@@ -962,8 +1078,27 @@
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// Note that you don&#39;t have to pass an owned buffered reader, it could be also `&amp;mut`.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>buf</span>: <span class='ident'>B</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>B</span><span class='op'>&gt;</span> {
-        <span class='ident'>WhiteReader</span> { <span class='ident'>buf</span>: <span class='ident'>buf</span>, <span class='ident'>line</span>: <span class='ident'>String</span>::<span class='ident'>new</span>(), <span class='ident'>words</span>: <span class='string'>&quot;&quot;</span>.<span class='ident'>split_whitespace</span>() }
+        <span class='ident'>WhiteReader</span> { <span class='ident'>buf</span>: <span class='ident'>buf</span>, <span class='ident'>line</span>: <span class='ident'>String</span>::<span class='ident'>new</span>(), <span class='ident'>words</span>: <span class='string'>&quot;&quot;</span>.<span class='ident'>split_ascii_whitespace</span>() }
     }
+}
+    
+<span class='doccomment'>/// Opens a file, and wraps in WhiteReader</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// Shortcut for creating a file, wrapping it in a BufReader and then in a WhiteReader.</span>
+<span class='doccomment'>/// This should be a static method on WhiteReader, but currently it&#39;s</span>
+<span class='doccomment'>/// impossible to implement it that way (it requires equality constraints in where clauses).</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// # Examples</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// Read an integer from a file.</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// ```no_run</span>
+<span class='doccomment'>/// # use whiteread::open;</span>
+<span class='doccomment'>/// let x: u32 = open(&quot;number.txt&quot;).unwrap().parse().unwrap();</span>
+<span class='doccomment'>/// ```</span>
+<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>open</span><span class='op'>&lt;</span><span class='ident'>P</span>: <span class='ident'>AsRef</span><span class='op'>&lt;</span><span class='ident'>Path</span><span class='op'>&gt;&gt;</span>(<span class='ident'>path</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>io</span>::<span class='ident'>BufReader</span><span class='op'>&lt;</span><span class='ident'>File</span><span class='op'>&gt;&gt;</span><span class='op'>&gt;</span> {
+	<span class='kw'>let</span> <span class='ident'>file</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>File</span>::<span class='ident'>open</span>(<span class='ident'>path</span>) );
+	<span class='prelude-val'>Ok</span>( <span class='ident'>WhiteReader</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>BufReader</span>::<span class='ident'>new</span>(<span class='ident'>file</span>)) )
 }
 
 <span class='doccomment'>/// # Parsing methods</span>
@@ -986,10 +1121,10 @@
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>p</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>T</span> { <span class='self'>self</span>.<span class='ident'>parse</span>().<span class='ident'>unwrap</span>() }
     
     <span class='kw'>fn</span> <span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='prelude-ty'>Option</span><span class='op'>&lt;</span>()<span class='op'>&gt;&gt;</span> {
-        <span class='self'>self</span>.<span class='ident'>words</span> <span class='op'>=</span> <span class='string'>&quot;&quot;</span>.<span class='ident'>split_whitespace</span>(); <span class='comment'>// keep it safe in case of early returns</span>
+        <span class='self'>self</span>.<span class='ident'>words</span> <span class='op'>=</span> <span class='string'>&quot;&quot;</span>.<span class='ident'>split_ascii_whitespace</span>(); <span class='comment'>// keep it safe in case of early returns</span>
         <span class='self'>self</span>.<span class='ident'>line</span>.<span class='ident'>clear</span>();
         <span class='kw'>let</span> <span class='ident'>n_bytes</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='self'>self</span>.<span class='ident'>buf</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>line</span>) );
-        <span class='self'>self</span>.<span class='ident'>words</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>transmute</span>(<span class='self'>self</span>.<span class='ident'>line</span>.<span class='ident'>split_whitespace</span>()) };
+        <span class='self'>self</span>.<span class='ident'>words</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>statify</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>line</span>).<span class='ident'>split_ascii_whitespace</span>() };
         <span class='kw'>if</span> <span class='ident'>n_bytes</span> <span class='op'>==</span> <span class='number'>0</span> { <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='prelude-val'>None</span>); }
         <span class='prelude-val'>Ok</span>(<span class='prelude-val'>Some</span>( () ))
     }
@@ -1027,7 +1162,7 @@
     <span class='doccomment'>/// Additionaly to usual parse errors, this method may also return `Leftovers`.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>finish_line</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>White</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>WhiteResult</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>value</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>White</span>::<span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>) );
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(_) <span class='op'>=</span> <span class='ident'>Iterator</span>::<span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>) { <span class='prelude-val'>Err</span>(<span class='ident'>Leftovers</span>) }
+        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Ok</span>(<span class='prelude-val'>Some</span>(_)) <span class='op'>=</span> <span class='ident'>StrStream</span>::<span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>) { <span class='prelude-val'>Err</span>(<span class='ident'>Leftovers</span>) }
         <span class='kw'>else</span> { <span class='prelude-val'>Ok</span>(<span class='ident'>value</span>) }
     }
 }
@@ -1052,12 +1187,9 @@
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>B</span>: <span class='ident'>BufRead</span><span class='op'>&gt;</span> <span class='ident'>StrStream</span> <span class='kw'>for</span> <span class='ident'>WhiteReader</span><span class='op'>&lt;</span><span class='ident'>B</span><span class='op'>&gt;</span> {
     <span class='kw'>fn</span> <span class='ident'>next</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;&gt;</span> {
         <span class='kw'>loop</span> {
-            <span class='comment'>// WA https://github.com/rust-lang/rfcs/issues/811</span>
-            <span class='kw'>unsafe</span> <span class='kw'>fn</span> <span class='ident'>statify</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>(<span class='ident'>x</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>T</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> <span class='kw-2'>mut</span> <span class='ident'>T</span> {
-                <span class='ident'>transmute</span>(<span class='ident'>x</span>)
-            }
+            <span class='comment'>// WA using statify, because of https://github.com/rust-lang/rfcs/issues/811</span>
             
-            <span class='kw'>match</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>StrStream</span>::<span class='ident'>next</span>(<span class='kw'>unsafe</span>{ <span class='ident'>statify</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>) }) ) {
+            <span class='kw'>match</span> <span class='macro'>try</span><span class='macro'>!</span>( <span class='ident'>StrStream</span>::<span class='ident'>next</span>(<span class='kw'>unsafe</span>{ <span class='ident'>statify_mut</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>words</span>) }) ) {
                 <span class='prelude-val'>None</span> <span class='op'>=&gt;</span> (),
                 <span class='ident'>some</span> <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>some</span>)
             }

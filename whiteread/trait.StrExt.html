@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `WhiteResult` type in crate `whiteread`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, WhiteResult">
+    <meta name="description" content="API documentation for the Rust `StrExt` trait in crate `whiteread`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, StrExt">
 
-    <title>whiteread::WhiteResult - Rust</title>
+    <title>whiteread::StrExt - Rust</title>
 
     <link rel="stylesheet" type="text/css" href="../main.css">
 
@@ -26,7 +26,7 @@
 
     <section class="sidebar">
         
-        <p class='location'><a href='index.html'>whiteread</a></p><script>window.sidebarCurrent = {name: 'WhiteResult', ty: 'type', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+        <p class='location'><a href='index.html'>whiteread</a></p><script>window.sidebarCurrent = {name: 'StrExt', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
     </section>
 
     <nav class="sub">
@@ -40,13 +40,24 @@
         </form>
     </nav>
 
-    <section id='main' class="content type">
-<h1 class='fqn'><span class='in-band'><a href='index.html'>whiteread</a>::<wbr><a class='type' href=''>WhiteResult</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='index.html'>whiteread</a>::<wbr><a class='trait' href=''>StrExt</a></span><span class='out-of-band'><span id='render-detail'>
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-202' class='srclink' href='../src/whiteread/lib.rs.html#138' title='goto source code'>[src]</a></span></h1>
-<pre class='rust typedef'>type WhiteResult&lt;T&gt; = <a class='enum' href='http://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;T, <a class='enum' href='../whiteread/enum.WhiteError.html' title='whiteread::WhiteError'>WhiteError</a>&gt;;</pre></section>
+        </span><a id='src-168' class='srclink' href='../src/whiteread/lib.rs.html#90-92' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait StrExt {
+    fn <a href='#tymethod.split_ascii_whitespace' class='fnname'>split_ascii_whitespace</a>(&amp;self) -&gt; <a class='struct' href='../whiteread/struct.SplitAsciiWhitespace.html' title='whiteread::SplitAsciiWhitespace'>SplitAsciiWhitespace</a>;
+}</pre>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.split_ascii_whitespace' class='method stab '><code>fn <a href='#tymethod.split_ascii_whitespace' class='fnname'>split_ascii_whitespace</a>(&amp;self) -&gt; <a class='struct' href='../whiteread/struct.SplitAsciiWhitespace.html' title='whiteread::SplitAsciiWhitespace'>SplitAsciiWhitespace</a></code></h3></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><code>impl <a class='trait' href='../whiteread/trait.StrExt.html' title='whiteread::StrExt'>StrExt</a> for <a href='http://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></li>
+</ul><script type="text/javascript" async
+                              src="../implementors/whiteread/trait.StrExt.js">
+                      </script></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>
