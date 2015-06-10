@@ -61,38 +61,38 @@ impl<'a> StrStream for SplitWhitespace<'a> {
 /// It doesn't consider to be whitespace any of non-ascii UTF whitespace characters
 /// (such as non-breaking space).
 pub struct SplitAsciiWhitespace<'a> {
-	s: &'a str
+    s: &'a str
 }
 
 impl<'a> StrStream for SplitAsciiWhitespace<'a> {
-	fn next(&mut self) -> io::Result<Option<&str>> {
-		let bytes = self.s.as_bytes();
-		let mut start = 0;
-		while let Some(&c) = bytes.get(start) {
-			if c > b' ' { break; }
-			start += 1;
-		}
-		let mut end = start;
-		while let Some(&c) = bytes.get(end) {
-			if c <= b' ' { break; }
-			end += 1;
-		}
-		let ret = if start != end {
-			Ok(Some( unsafe { self.s.slice_unchecked(start, end) } ))
-		} else {
-			Ok(None)
-		};
-		self.s = unsafe { self.s.slice_unchecked(end, bytes.len()) };
-		ret
-	}
+    fn next(&mut self) -> io::Result<Option<&str>> {
+        let bytes = self.s.as_bytes();
+        let mut start = 0;
+        while let Some(&c) = bytes.get(start) {
+            if c > b' ' { break; }
+            start += 1;
+        }
+        let mut end = start;
+        while let Some(&c) = bytes.get(end) {
+            if c <= b' ' { break; }
+            end += 1;
+        }
+        let ret = if start != end {
+            Ok(Some( unsafe { self.s.slice_unchecked(start, end) } ))
+        } else {
+            Ok(None)
+        };
+        self.s = unsafe { self.s.slice_unchecked(end, bytes.len()) };
+        ret
+    }
 }
 
 pub trait StrExt {
-	fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace;
+    fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace;
 }
 
 impl StrExt for str {
-	fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace { SplitAsciiWhitespace { s: self } }
+    fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace { SplitAsciiWhitespace { s: self } }
 }
 
 // White trait ------------------------------------------------------------------------------------------
@@ -444,11 +444,11 @@ pub struct WhiteReader<B: BufRead> {
 }
 
 unsafe fn statify_mut<T>(x: &mut T) -> &'static mut T {
-	&mut *(x as *mut _)
+    &mut *(x as *mut _)
 }
 
 unsafe fn statify<T>(x: &T) -> &'static T {
-	&*(x as *const _)
+    &*(x as *const _)
 }
 
 /// # Constructors
@@ -476,8 +476,8 @@ impl<B: BufRead> WhiteReader<B> {
 /// let x: u32 = open("number.txt").unwrap().parse().unwrap();
 /// ```
 pub fn open<P: AsRef<Path>>(path: P) -> io::Result<WhiteReader<io::BufReader<File>>> {
-	let file = try!( File::open(path) );
-	Ok( WhiteReader::new(io::BufReader::new(file)) )
+    let file = try!( File::open(path) );
+    Ok( WhiteReader::new(io::BufReader::new(file)) )
 }
 
 /// # Parsing methods
