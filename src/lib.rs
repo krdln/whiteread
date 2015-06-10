@@ -40,7 +40,6 @@
 
 use std::io::{self, BufRead};
 use std::str::SplitWhitespace;
-use std::mem::transmute;
 
 /// A streaming iterator yielding borrowed strings.
 pub trait StrStream {
@@ -51,6 +50,47 @@ impl<'a> StrStream for SplitWhitespace<'a> {
     fn next(&mut self) -> io::Result<Option<&str>> {
         Ok( Iterator::next(self) )
     }
+}
+
+/// Fast version of std::str::SplitWhitespace, but with some drawbacks.
+///
+/// It considers to be whitespace everything with codepoint <= 0x20
+/// (this includes " \t\n\r", but also some other unprintable characters).
+/// It doesn't consider to be whitespace any of non-ascii UTF whitespace characters
+/// (such as non-breaking space).
+pub struct SplitAsciiWhitespace<'a> {
+	s: &'a str
+}
+
+impl<'a> StrStream for SplitAsciiWhitespace<'a> {
+	fn next(&mut self) -> io::Result<Option<&str>> {
+		let bytes = self.s.as_bytes();
+		let mut start = 0;
+		while let Some(&c) = bytes.get(start) {
+			if c > b' ' { break; }
+			start += 1;
+		}
+		let mut end = start;
+		while let Some(&c) = bytes.get(end) {
+			if c <= b' ' { break; }
+			end += 1;
+		}
+		let ret = if start != end {
+			Ok(Some( unsafe { self.s.slice_unchecked(start, end) } ))
+		} else {
+			Ok(None)
+		};
+		self.s = unsafe { self.s.slice_unchecked(end, bytes.len()) };
+		ret
+	}
+}
+
+pub trait StrExt {
+	fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace;
+}
+
+impl StrExt for str {
+	fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace { SplitAsciiWhitespace { s: self } }
 }
 
 // White trait ------------------------------------------------------------------------------------------
@@ -324,10 +364,10 @@ pub fn parse_line<T: White>() -> WhiteResult<T> {
 /// assert!(number == 123);
 /// ```
 pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
-    let mut stream = s.split_whitespace();
+    let mut stream = SplitAsciiWhitespace { s: s };
     let value = try!( White::read(&mut stream) );
     
-    if let Some(_) = Iterator::next(&mut stream) { Err(Leftovers) }
+    if let Ok(Some(_)) = StrStream::next(&mut stream) { Err(Leftovers) }
     else { Ok(value) }
 }
 
@@ -398,7 +438,15 @@ pub struct WhiteReader<B: BufRead> {
     // We use 'static lifetime here, but it actually points into line's buffer.
     // We manualy check that after each mutation of line,
     // words are immediately updated.
-    words: SplitWhitespace<'static>
+    words: SplitAsciiWhitespace<'static>
+}
+
+unsafe fn statify_mut<T>(x: &mut T) -> &'static mut T {
+	&mut *(x as *mut _)
+}
+
+unsafe fn statify<T>(x: &T) -> &'static T {
+	&*(x as *const _)
 }
 
 /// # Constructors
@@ -407,7 +455,7 @@ impl<B: BufRead> WhiteReader<B> {
     ///
     /// Note that you don't have to pass an owned buffered reader, it could be also `&mut`.
     pub fn new(buf: B) -> WhiteReader<B> {
-        WhiteReader { buf: buf, line: String::new(), words: "".split_whitespace() }
+        WhiteReader { buf: buf, line: String::new(), words: "".split_ascii_whitespace() }
     }
 }
 
@@ -431,10 +479,10 @@ impl<B: BufRead> WhiteReader<B> {
     pub fn p<T: White>(&mut self) -> T { self.parse().unwrap() }
     
     fn read_line(&mut self) -> io::Result<Option<()>> {
-        self.words = "".split_whitespace(); // keep it safe in case of early returns
+        self.words = "".split_ascii_whitespace(); // keep it safe in case of early returns
         self.line.clear();
         let n_bytes = try!( self.buf.read_line(&mut self.line) );
-        self.words = unsafe { transmute(self.line.split_whitespace()) };
+        self.words = unsafe { statify(&self.line).split_ascii_whitespace() };
         if n_bytes == 0 { return Ok(None); }
         Ok(Some( () ))
     }
@@ -472,7 +520,7 @@ impl<B: BufRead> WhiteReader<B> {
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn finish_line<T: White>(&mut self) -> WhiteResult<T> {
         let value = try!( White::read(&mut self.words) );
-        if let Some(_) = Iterator::next(&mut self.words) { Err(Leftovers) }
+        if let Ok(Some(_)) = StrStream::next(&mut self.words) { Err(Leftovers) }
         else { Ok(value) }
     }
 }
@@ -497,12 +545,9 @@ impl<B: BufRead> WhiteReader<B> {
 impl<B: BufRead> StrStream for WhiteReader<B> {
     fn next(&mut self) -> io::Result<Option<&str>> {
         loop {
-            // WA https://github.com/rust-lang/rfcs/issues/811
-            unsafe fn statify<T>(x: &mut T) -> &'static mut T {
-                transmute(x)
-            }
+            // WA using statify, because of https://github.com/rust-lang/rfcs/issues/811
             
-            match try!( StrStream::next(unsafe{ statify(&mut self.words) }) ) {
+            match try!( StrStream::next(unsafe{ statify_mut(&mut self.words) }) ) {
                 None => (),
                 some => return Ok(some)
             }
