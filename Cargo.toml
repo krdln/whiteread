@@ -1,6 +1,6 @@
 [package]
 name = "whiteread"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Michał Krasnoborski <mkrdln@gmail.com>"]
 
 description = "Crate for easily reading whitespace-separated values from strings or input."

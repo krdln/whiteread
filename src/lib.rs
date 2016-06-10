@@ -6,6 +6,9 @@
 //! describes types that can be parsed from whitespace-separated words,
 //! which includes eg. integers, tuples and vectors.
 //!
+//! The definition of whitespace used in this crate is described in
+//! [`SplitAsciiWhitespace`](struct.SplitAsciiWhitespace.html).
+//!
 //! # Examples
 //!
 //! Basics

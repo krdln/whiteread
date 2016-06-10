@@ -1,2 +1,7 @@
 target
 Cargo.lock
+utils
+perf.data*
+test.rs
+test
+mini.rs
