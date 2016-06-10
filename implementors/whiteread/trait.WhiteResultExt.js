@@ -1,5 +1,5 @@
 (function() {var implementors = {};
-implementors['whiteread'] = [];
+implementors["whiteread"] = [];
 
             if (window.register_implementors) {
                 window.register_implementors(implementors);
