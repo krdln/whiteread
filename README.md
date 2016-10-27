@@ -33,8 +33,8 @@ let x: i32 = parse_line().unwrap();
 Tuples and vectors (nest everything as you like)!
 
 ```rust
-let tup: (i32, f64) = parse_string("  5  3.14 ");
-let v: Vec<(String, u8)> = parse_string("one 1 two 2 three 3");
+let tup: (i32, f64) = parse_string("  5  3.14 ").unwrap();
+let v: Vec<(String, u8)> = parse_string("one 1 two 2 three 3").unwrap();
 ```
 
 Wrapping `StdinLock` for non-line-based parsing...
