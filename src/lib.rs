@@ -25,7 +25,7 @@
 //! # use whiteread::parse_line;
 //! let x: i32 = parse_line().unwrap();
 //! ```
-//! 
+//!
 //! Efficient reading from stdin (newline-agnostic) with [`WhiteReader`](struct.WhiteReader.html).
 //! Stops on error.
 //!
@@ -53,7 +53,7 @@ pub trait StrStream {
 
 impl<'a> StrStream for SplitWhitespace<'a> {
     fn next(&mut self) -> io::Result<Option<&str>> {
-        Ok( Iterator::next(self) )
+        Ok(Iterator::next(self))
     }
 }
 
@@ -64,7 +64,7 @@ impl<'a> StrStream for SplitWhitespace<'a> {
 /// It doesn't consider to be whitespace any of non-ascii UTF whitespace characters
 /// (such as non-breaking space).
 pub struct SplitAsciiWhitespace<'a> {
-    s: &'a str
+    s: &'a str,
 }
 
 impl<'a> StrStream for SplitAsciiWhitespace<'a> {
@@ -72,16 +72,20 @@ impl<'a> StrStream for SplitAsciiWhitespace<'a> {
         let bytes = self.s.as_bytes();
         let mut start = 0;
         while let Some(&c) = bytes.get(start) {
-            if c > b' ' { break; }
+            if c > b' ' {
+                break;
+            }
             start += 1;
         }
         let mut end = start;
         while let Some(&c) = bytes.get(end) {
-            if c <= b' ' { break; }
+            if c <= b' ' {
+                break;
+            }
             end += 1;
         }
         let ret = if start != end {
-            Ok(Some( unsafe { self.s.slice_unchecked(start, end) } ))
+            Ok(Some(unsafe { self.s.slice_unchecked(start, end) }))
         } else {
             Ok(None)
         };
@@ -95,7 +99,9 @@ pub trait StrExt {
 }
 
 impl StrExt for str {
-    fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace { SplitAsciiWhitespace { s: self } }
+    fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace {
+        SplitAsciiWhitespace { s: self }
+    }
 }
 
 // White trait ------------------------------------------------------------------------------------------
@@ -110,7 +116,7 @@ impl StrExt for str {
 /// # Examples
 ///
 /// Using a trait directly
-/// 
+///
 /// ```
 /// use whiteread::White;
 /// let mut stream = "123".split_whitespace();
@@ -156,21 +162,23 @@ pub type WhiteResult<T> = Result<T, WhiteError>;
 pub enum WhiteError {
     /// There was not enough input to parse a value.
     TooShort,
-    
+
     /// Excessive input was provided.
     Leftovers,
-    
+
     /// Parse error occured (data was in invalid format).
     ParseError,
-    
+
     /// IO Error occured.
-    IoError(io::Error)
+    IoError(io::Error),
 }
 
 pub use WhiteError::*;
 
 impl From<io::Error> for WhiteError {
-    fn from(e: io::Error) -> WhiteError { IoError(e) }
+    fn from(e: io::Error) -> WhiteError {
+        IoError(e)
+    }
 }
 
 impl std::error::Error for WhiteError {
@@ -179,14 +187,14 @@ impl std::error::Error for WhiteError {
             TooShort => "not enough input to parse a value",
             Leftovers => "excessive input provided",
             ParseError => "parse error occured",
-            IoError(ref e) => e.description()
+            IoError(ref e) => e.description(),
         }
     }
-    
+
     fn cause(&self) -> Option<&std::error::Error> {
         match *self {
             IoError(ref e) => e.cause(),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -196,13 +204,13 @@ impl std::fmt::Display for WhiteError {
         use std::error::Error;
         match *self {
             IoError(ref e) => e.fmt(fmt),
-            _ => fmt.write_str(self.description())
+            _ => fmt.write_str(self.description()),
         }
     }
 }
 
 // ~ impl From<WhiteError> for io::Error {
-    // TODO
+// TODO
 // ~ }
 
 /// Trait providing additional methods on `WhiteResult`.
@@ -227,7 +235,7 @@ pub trait WhiteResultExt<T> {
     /// while let Some(x) = try!( i.parse::<i64>().ok_or_none() ) { s += x }
     /// Ok(s)
     /// # }
-    /// 
+    ///
     fn ok_or_none(self) -> WhiteResult<Option<T>>;
 }
 
@@ -236,7 +244,7 @@ impl<T> WhiteResultExt<T> for WhiteResult<T> {
         match self {
             Ok(x) => Ok(Some(x)),
             Err(TooShort) => Ok(None),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 }
@@ -269,20 +277,20 @@ white!(f64);
 
 impl White for char {
     fn read<I: StrStream>(it: &mut I) -> WhiteResult<char> {
-        let s = try!( it.next() );
-        s.and_then( |s| s.chars().next() ).ok_or(TooShort)
+        let s = try!(it.next());
+        s.and_then(|s| s.chars().next()).ok_or(TooShort)
     }
 }
 
 impl<T: White, U: White> White for (T, U) {
     fn read<I: StrStream>(it: &mut I) -> WhiteResult<(T, U)> {
-        Ok( (try!( White::read(it) ), try!( White::read(it) )) )
+        Ok((try!(White::read(it)), try!(White::read(it))))
     }
 }
 
 impl<T: White, U: White, V: White> White for (T, U, V) {
     fn read<I: StrStream>(it: &mut I) -> WhiteResult<(T, U, V)> {
-        Ok( (try!( White::read(it) ), try!( White::read(it) ), try!( White::read(it) )) )
+        Ok((try!(White::read(it)), try!(White::read(it)), try!(White::read(it))))
     }
 }
 
@@ -295,7 +303,9 @@ impl White for () {
 impl<T: White> White for Vec<T> {
     fn read<I: StrStream>(it: &mut I) -> WhiteResult<Vec<T>> {
         let mut v = vec![];
-        while let Some(x) = try!(White::read(it).ok_or_none()) { v.push(x); }
+        while let Some(x) = try!(White::read(it).ok_or_none()) {
+            v.push(x);
+        }
         Ok(v)
     }
 }
@@ -317,7 +327,9 @@ impl<T: White> White for Lengthed<T> {
         let mut v = Vec::with_capacity(sz);
         while let Some(x) = try!(White::read(it).ok_or_none()) {
             v.push(x);
-            if v.len() == sz { return Ok(Lengthed(v)); }
+            if v.len() == sz {
+                return Ok(Lengthed(v));
+            }
         }
         Err(TooShort)
     }
@@ -329,14 +341,14 @@ impl<T: White> White for Lengthed<T> {
 // ~ pub struct Zeroed<T>(pub Vec<T>);
 
 // ~ impl<T: White + std::num::Zero + PartialEq> White for Zeroed<T> {
-    // ~ fn read<I: StrStream>(it: &mut I) -> WhiteResult<Zeroed<T>> {
-        // ~ let mut v = vec![];
-        // ~ while let Some(x) = White::read(it) {
-            // ~ if x == std::num::Zero::zero() { return Some(Zeroed(v)); }
-            // ~ else { v.push(x) }
-        // ~ }
-        // ~ panic!("white: Zeroed Vec didn't end at 0");
-    // ~ }
+// ~ fn read<I: StrStream>(it: &mut I) -> WhiteResult<Zeroed<T>> {
+// ~ let mut v = vec![];
+// ~ while let Some(x) = White::read(it) {
+// ~ if x == std::num::Zero::zero() { return Some(Zeroed(v)); }
+// ~ else { v.push(x) }
+// ~ }
+// ~ panic!("white: Zeroed Vec didn't end at 0");
+// ~ }
 // ~ }
 
 // Helpers ----------------------------------------------------------------------------------------------
@@ -355,8 +367,10 @@ impl<T: White> White for Lengthed<T> {
 /// ```
 pub fn parse_line<T: White>() -> WhiteResult<T> {
     let mut line = String::new();
-    let n_bytes = try!( std::io::stdin().read_line(&mut line) );
-    if n_bytes == 0 { return Err(TooShort); }
+    let n_bytes = try!(std::io::stdin().read_line(&mut line));
+    if n_bytes == 0 {
+        return Err(TooShort);
+    }
     parse_string(&line)
 }
 
@@ -370,10 +384,13 @@ pub fn parse_line<T: White>() -> WhiteResult<T> {
 /// ```
 pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
     let mut stream = SplitAsciiWhitespace { s: s };
-    let value = try!( White::read(&mut stream) );
-    
-    if let Ok(Some(_)) = StrStream::next(&mut stream) { Err(Leftovers) }
-    else { Ok(value) }
+    let value = try!(White::read(&mut stream));
+
+    if let Ok(Some(_)) = StrStream::next(&mut stream) {
+        Err(Leftovers)
+    } else {
+        Ok(value)
+    }
 }
 
 // WhiteReader ------------------------------------------------------------------------------------------
@@ -409,7 +426,7 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 ///
 ///
 /// Overview of how various methods handle newlines:
-/// 
+///
 /// ```
 /// # use whiteread::{WhiteReader,TooShort};
 /// let data = std::io::Cursor::new(b"1 2\n\n3 4 5\n6 7\n8\n" as &[u8]);
@@ -425,12 +442,12 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
 /// # }
-/// # 
+/// #
 /// # match r.line::<u8>() {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
 /// # }
-/// # 
+/// #
 /// # match r.next_line() {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
@@ -439,11 +456,11 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 pub struct WhiteReader<B: BufRead> {
     buf: B,
     line: String,
-    
+
     // We use 'static lifetime here, but it actually points into line's buffer.
     // We manualy check that after each mutation of line,
     // words are immediately updated.
-    words: SplitAsciiWhitespace<'static>
+    words: SplitAsciiWhitespace<'static>,
 }
 
 unsafe fn statify_mut<T>(x: &mut T) -> &'static mut T {
@@ -460,10 +477,14 @@ impl<B: BufRead> WhiteReader<B> {
     ///
     /// Note that you don't have to pass an owned buffered reader, it could be also `&mut`.
     pub fn new(buf: B) -> WhiteReader<B> {
-        WhiteReader { buf: buf, line: String::new(), words: "".split_ascii_whitespace() }
+        WhiteReader {
+            buf: buf,
+            line: String::new(),
+            words: "".split_ascii_whitespace(),
+        }
     }
 }
-    
+
 /// Opens a file, and wraps in WhiteReader
 ///
 /// Shortcut for creating a file, wrapping it in a BufReader and then in a WhiteReader.
@@ -479,8 +500,8 @@ impl<B: BufRead> WhiteReader<B> {
 /// let x: u32 = open("number.txt").unwrap().parse().unwrap();
 /// ```
 pub fn open<P: AsRef<Path>>(path: P) -> io::Result<WhiteReader<io::BufReader<File>>> {
-    let file = try!( File::open(path) );
-    Ok( WhiteReader::new(io::BufReader::new(file)) )
+    let file = try!(File::open(path));
+    Ok(WhiteReader::new(io::BufReader::new(file)))
 }
 
 /// # Parsing methods
@@ -496,21 +517,25 @@ impl<B: BufRead> WhiteReader<B> {
     pub fn parse<T: White>(&mut self) -> WhiteResult<T> {
         White::read(self)
     }
-    
+
     /// Just parse().unwrap().
-    /// 
+    ///
     /// Use it if you really value your time. ;)
-    pub fn p<T: White>(&mut self) -> T { self.parse().unwrap() }
-    
+    pub fn p<T: White>(&mut self) -> T {
+        self.parse().unwrap()
+    }
+
     fn read_line(&mut self) -> io::Result<Option<()>> {
         self.words = "".split_ascii_whitespace(); // keep it safe in case of early returns
         self.line.clear();
-        let n_bytes = try!( self.buf.read_line(&mut self.line) );
+        let n_bytes = try!(self.buf.read_line(&mut self.line));
         self.words = unsafe { statify(&self.line).split_ascii_whitespace() };
-        if n_bytes == 0 { return Ok(None); }
-        Ok(Some( () ))
+        if n_bytes == 0 {
+            return Ok(None);
+        }
+        Ok(Some(()))
     }
-    
+
     /// Reads a new line from input and parses it into White value **as a whole**.
     ///
     /// The function is called just `line` for brevity and also to
@@ -520,21 +545,25 @@ impl<B: BufRead> WhiteReader<B> {
     ///
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn line<T: White>(&mut self) -> WhiteResult<T> {
-        if let None = try!( self.read_line() ) { return Err(TooShort); };
+        if let None = try!(self.read_line()) {
+            return Err(TooShort);
+        };
         self.finish_line()
     }
-    
+
     /// Reads a new line from input and parses some part of it into White value.
     pub fn start_line<T: White>(&mut self) -> WhiteResult<T> {
-        if let None = try!( self.read_line() ) { return Err(TooShort); };
+        if let None = try!(self.read_line()) {
+            return Err(TooShort);
+        };
         White::read(&mut self.words)
     }
-    
+
     /// Parses some part of current line into White value.
     pub fn continue_line<T: White>(&mut self) -> WhiteResult<T> {
         White::read(&mut self.words)
     }
-    
+
     /// Parses remaining part of current line into White value.
     ///
     /// It could be used with `T=()`, to just check if we're on the end of line.
@@ -543,9 +572,12 @@ impl<B: BufRead> WhiteReader<B> {
     ///
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn finish_line<T: White>(&mut self) -> WhiteResult<T> {
-        let value = try!( White::read(&mut self.words) );
-        if let Ok(Some(_)) = StrStream::next(&mut self.words) { Err(Leftovers) }
-        else { Ok(value) }
+        let value = try!(White::read(&mut self.words));
+        if let Ok(Some(_)) = StrStream::next(&mut self.words) {
+            Err(Leftovers)
+        } else {
+            Ok(value)
+        }
     }
 }
 
@@ -558,24 +590,30 @@ impl<B: BufRead> WhiteReader<B> {
     /// Note that line's content will not be considered consumed
     /// and will be available for `parse` and `continue_line`.
     pub fn next_line(&mut self) -> WhiteResult<&str> {
-        if let None = try!( self.read_line() ) { return Err(TooShort); }
+        if let None = try!(self.read_line()) {
+            return Err(TooShort);
+        }
         Ok(&self.line)
     }
-    
+
     /// Gets underlying buffer back.
-    pub fn unwrap(self) -> B { self.buf }
+    pub fn unwrap(self) -> B {
+        self.buf
+    }
 }
 
 impl<B: BufRead> StrStream for WhiteReader<B> {
     fn next(&mut self) -> io::Result<Option<&str>> {
         loop {
             // WA using statify, because of https://github.com/rust-lang/rfcs/issues/811
-            
-            match try!( StrStream::next(unsafe{ statify_mut(&mut self.words) }) ) {
+
+            match try!(StrStream::next(unsafe { statify_mut(&mut self.words) })) {
                 None => (),
-                some => return Ok(some)
+                some => return Ok(some),
             }
-            if let None = try!( self.read_line() ) { return Ok(None) };
+            if let None = try!(self.read_line()) {
+                return Ok(None);
+            };
         }
     }
 }
