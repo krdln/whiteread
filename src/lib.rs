@@ -335,21 +335,30 @@ impl<T: White> White for Lengthed<T> {
     }
 }
 
-// TODO: use cargo nightly feature for Zero
-// ~ /// Wrapper for reading vector of numbers represented by a list ending with 0.
-// ~ #[derive(Debug)]
-// ~ pub struct Zeroed<T>(pub Vec<T>);
+/// Wrapper for reading vector of numbers represented by a list ending with 0.
+///
+/// # Examples
+/// ```
+/// # use whiteread::{parse_string, Zeroed, WhiteError};
+/// let (Zeroed(v), _): (Zeroed<u8>, String) = parse_string("20 21 22 0 foo").unwrap();
+/// assert_eq!(v, &[20, 21, 22]);
+///
+/// assert!(parse_string::<Zeroed<u8>>("20 21 22").is_err());
+/// ```
+#[derive(Debug)]
+pub struct Zeroed<T>(pub Vec<T>);
 
-// ~ impl<T: White + std::num::Zero + PartialEq> White for Zeroed<T> {
-// ~ fn read<I: StrStream>(it: &mut I) -> WhiteResult<Zeroed<T>> {
-// ~ let mut v = vec![];
-// ~ while let Some(x) = White::read(it) {
-// ~ if x == std::num::Zero::zero() { return Some(Zeroed(v)); }
-// ~ else { v.push(x) }
-// ~ }
-// ~ panic!("white: Zeroed Vec didn't end at 0");
-// ~ }
-// ~ }
+impl<T: White + Default + PartialEq> White for Zeroed<T> {
+    fn read<I: StrStream>(it: &mut I) -> WhiteResult<Zeroed<T>> {
+        let mut v = vec![];
+        let zero = Default::default();
+        loop {
+            let x = try!(White::read(it));
+            if x == zero { return Ok(Zeroed(v)); }
+            else { v.push(x) }
+        }
+    }
+}
 
 // Helpers ----------------------------------------------------------------------------------------------
 
