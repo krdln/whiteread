@@ -310,6 +310,72 @@ impl<T: White> White for Vec<T> {
     }
 }
 
+/// Used to consume and ignore one whitespace-separated value
+///
+/// # Examples
+///
+/// Providing type hint
+///
+/// ```
+/// # use whiteread::{parse_string, Skip};
+/// let (_, x, _): (Skip, i32, Skip) = parse_string("foo 5 30").unwrap();
+/// assert_eq!(x, 5);
+/// ```
+///
+/// Relying on type inference (for some reason, {} are mandatory)
+///
+/// ```
+/// # use whiteread::{parse_string, Skip};
+/// let (Skip{}, x, Skip{}) = parse_string("foo 5 30").unwrap();
+/// let x: i32 = x;
+/// assert_eq!(x, 5);
+/// ```
+#[derive(Debug, Eq, PartialEq)]
+pub struct Skip;
+
+impl White for Skip {
+    fn read<I: StrStream>(it: &mut I) -> WhiteResult<Skip> {
+        it.next()?;
+        Ok(Skip)
+    }
+}
+
+/// Used to ignore everything till the end of the reader
+///
+/// Using this should be only necessary in conjuction with `parse_line`
+/// and `parse_string`, to avoid the `Leftovers` error.
+/// When using `WhiteReader`, you can just use `start_line` or `parse`
+/// instead.
+///
+/// # Examples
+///
+/// Providing type hint
+///
+/// ```
+/// # use whiteread::{parse_string, SkipAll};
+/// let (s, x, _): (String, i32, SkipAll) = parse_string("foo 5 ... ... ...").unwrap();
+/// assert_eq!((s, x), ("foo".to_owned(), 5));
+/// ```
+///
+/// Relying on type inference (for some reason, {} are mandatory)
+///
+/// ```
+/// # use whiteread::{parse_string, SkipAll};
+/// let (s, x, SkipAll{}) = parse_string("foo 5").unwrap();
+/// let x: i32 = x;
+/// let s: String = s;
+/// assert_eq!((s, x), ("foo".to_owned(), 5));
+/// ```
+#[derive(Debug, Eq, PartialEq)]
+pub struct SkipAll;
+
+impl White for SkipAll {
+    fn read<I: StrStream>(it: &mut I) -> WhiteResult<SkipAll> {
+        while let Some(_) = it.next()? {};
+        Ok(SkipAll)
+    }
+}
+
 /// Wrapper for reading vector of values represented by a list prepended by a number of elements.
 ///
 /// # Examples
@@ -585,6 +651,23 @@ impl<B: BufRead> WhiteReader<B> {
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn finish_line<T: White>(&mut self) -> WhiteResult<T> {
         let value = White::read(&mut self.words)?;
+        if let Ok(Some(_)) = StrStream::next(&mut self.words) {
+            Err(Leftovers)
+        } else {
+            Ok(value)
+        }
+    }
+
+    /// Parses remaining part of reader into White value
+    /// in a line-agnostic way.
+    ///
+    /// It could be used with `T=()`, to just check if we're at the EOF.
+    /// 
+    /// # Errors
+    ///
+    /// Additionaly to usual parse errors, this method may also return `Leftovers`.
+    pub fn finish<T: White>(&mut self) -> WhiteResult<T> {
+        let value = self.parse()?;
         if let Ok(Some(_)) = StrStream::next(&mut self.words) {
             Err(Leftovers)
         } else {
