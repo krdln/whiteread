@@ -5,3 +5,5 @@ perf.data*
 test.rs
 test
 mini.rs
+.*.swp
+*.bk
