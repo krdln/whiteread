@@ -1,5 +1,3 @@
-// #![feature(zero_one)] // TODO see below
-
 //! Crate for reading whitespace-separated values.
 //!
 //! The crate defines a trait [`White`](trait.White.html), which
@@ -530,6 +528,8 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
 /// # }
+///
+/// # Errors
 /// ```
 pub struct WhiteReader<B: BufRead> {
     buf: B,
@@ -550,6 +550,8 @@ unsafe fn statify<T>(x: &T) -> &'static T {
 }
 
 /// # Constructors
+///
+/// Note: There's also [`open`](fn.open.html) constructor, which is a freestanding function.
 impl<B: BufRead> WhiteReader<B> {
     /// Wraps a BufRead.
     ///
@@ -566,7 +568,8 @@ impl<B: BufRead> WhiteReader<B> {
 /// Opens a file, and wraps in WhiteReader
 ///
 /// Shortcut for creating a file, wrapping it in a BufReader and then in a WhiteReader.
-/// This should be a static method on WhiteReader, but currently it's
+///
+/// Note: this should be a static method on WhiteReader, but currently it's
 /// impossible to implement it that way (it requires equality constraints in where clauses).
 ///
 /// # Examples
@@ -582,11 +585,11 @@ pub fn open<P: AsRef<Path>>(path: P) -> io::Result<WhiteReader<io::BufReader<Fil
     Ok(WhiteReader::new(io::BufReader::new(file)))
 }
 
-/// # Parsing methods
+/// # Line-agnostic parsing
 ///
 /// Following methods parse some part of input into a White value.
 ///
-/// # Errors
+/// ## Errors
 ///
 /// These methods may return `TooShort`, `ParseError` or `IoError` error variant.
 /// If they return other variants too, it is stated explicitely.
@@ -603,6 +606,32 @@ impl<B: BufRead> WhiteReader<B> {
         self.parse().unwrap()
     }
 
+    /// Parses remaining part of reader into White value
+    /// in a line-agnostic way.
+    ///
+    /// It could be used with `T=()`, to just check if we're at the EOF.
+    ///
+    /// ### Errors
+    ///
+    /// Additionaly to usual parse errors, this method may also return `Leftovers`.
+    pub fn finish<T: White>(&mut self) -> WhiteResult<T> {
+        let value = self.parse()?;
+        if let Ok(Some(_)) = StrStream::next(&mut self.words) {
+            Err(Leftovers)
+        } else {
+            Ok(value)
+        }
+    }
+}
+/// # Line-aware parsing
+///
+/// Following methods parse some part of input into a White value.
+///
+/// ## Errors
+///
+/// These methods may return `TooShort`, `ParseError` or `IoError` error variant.
+/// If they return other variants too, it is stated explicitely.
+impl<B: BufRead> WhiteReader<B> {
     fn read_line(&mut self) -> io::Result<Option<()>> {
         self.words = "".split_ascii_whitespace(); // keep it safe in case of early returns
         self.line.clear();
@@ -619,7 +648,7 @@ impl<B: BufRead> WhiteReader<B> {
     /// The function is called just `line` for brevity and also to
     /// make it look different than global `read_line` to avoid mistakes.
     ///
-    /// # Errors
+    /// ### Errors
     ///
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn line<T: White>(&mut self) -> WhiteResult<T> {
@@ -646,7 +675,7 @@ impl<B: BufRead> WhiteReader<B> {
     ///
     /// It could be used with `T=()`, to just check if we're on the end of line.
     ///
-    /// # Errors
+    /// ### Errors
     ///
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn finish_line<T: White>(&mut self) -> WhiteResult<T> {
@@ -658,22 +687,6 @@ impl<B: BufRead> WhiteReader<B> {
         }
     }
 
-    /// Parses remaining part of reader into White value
-    /// in a line-agnostic way.
-    ///
-    /// It could be used with `T=()`, to just check if we're at the EOF.
-    /// 
-    /// # Errors
-    ///
-    /// Additionaly to usual parse errors, this method may also return `Leftovers`.
-    pub fn finish<T: White>(&mut self) -> WhiteResult<T> {
-        let value = self.parse()?;
-        if let Ok(Some(_)) = StrStream::next(&mut self.words) {
-            Err(Leftovers)
-        } else {
-            Ok(value)
-        }
-    }
 }
 
 /// # Additional methods
