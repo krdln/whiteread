@@ -11,6 +11,7 @@
 * Ensured that the crate can be pasted into a module
   and added a binary – now `cargo run` generates a template
   with `mod whiteread`.
+* Split crate into multiple modules.
 
 ## 0.3.0 – 2016-06-10
 

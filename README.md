@@ -12,8 +12,9 @@ and to be usable for parsing text input in format used in algorithmic contests.
 * Easy detection of end of input.
 * Proper (`Result`, not panics) handling of errors⁰.
 * No unnecessary allocs and locks.
-* One-file copy-pastable implementation with no dependencies.
-  You can use `cargo run` to generate a template.
+* "One-file" copy-pastable implementation with no dependencies.
+  This crate uses modules, but you can use `cargo run` to generate
+  a concatenated single-file template.
 
 ----
 ⁰) I wanted to just panic for simplicity, but then realized that one `unwrap()`
