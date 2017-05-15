@@ -18,7 +18,7 @@ and to be usable for parsing text input in format used in algorithmic contests.
 ⁰) I wanted to just panic for simplicity, but then realized that one `unwrap()`
 doesn't hurt too much. But if you really want to force panics, we got you covered too!
 
-# [Documentation](http://krdln.github.io/whiteread/whiteread/index.html)
+# [Documentation (0.3.0)](http://krdln.github.io/whiteread/whiteread/index.html)
 
 # [Crate](https://crates.io/crates/whiteread)
 
@@ -50,7 +50,9 @@ let (a, b): (i32, i32) = i.parse().unwrap();
 ...or just for speed:
 
 ```rust
-while let Ok((x, y)) = i.line::<(uint, f32)>() {
+while let Ok((x, y)) = i.line::<(usize, f32)>() {
 	println!("{} {}", y, x);
 }
 ```
+
+# [CHANGELOG](CHANGELOG.md)
