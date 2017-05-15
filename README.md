@@ -42,7 +42,7 @@ Wrapping `StdinLock` for non-line-based parsing...
 
 ```rust
 let i = std::io::stdin();
-let mut i = WhiteRead::new(i.lock());
+let mut i = Reader::new(i.lock());
 
 // (almost) equivalent to scanf("%d%d", &a, &b) or cin >> a >> b
 let (a, b): (i32, i32) = i.parse().unwrap();

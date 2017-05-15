@@ -15,7 +15,7 @@ use whiteread as w;
 fn main() {
     let input = std::io::stdin();
     let input = input.lock();
-    let mut input = w::WhiteReader::new(input);
+    let mut input = w::Reader::new(input);
     
     let _x: i32 = input.line().unwrap();
 }

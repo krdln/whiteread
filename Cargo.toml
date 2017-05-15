@@ -12,5 +12,10 @@ readme = "README.md"
 keywords = ["read", "parse", "input", "scanf", "whitespace"]
 license = "MIT"
 
+[[bin]]
+name = "whiteread-template"
+path = "src/main.rs"
+doc = false
+
 [dev-dependencies]
 tempfile = "2.1.5"

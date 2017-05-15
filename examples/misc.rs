@@ -1,5 +1,5 @@
 extern crate whiteread;
-use whiteread::{WhiteReader, parse_string, Lengthed, White};
+use whiteread::{Reader, parse_string, Lengthed, White};
 
 fn main() {
     // parse_string function
@@ -28,7 +28,7 @@ fn main() {
 
     // reader example
     let i = std::io::stdin();
-    let mut i = WhiteReader::new(i.lock());
+    let mut i = Reader::new(i.lock());
 
     while let Ok((x, y)) = i.line::<(f32, f32)>() {
         println!("{} * {} = {}", x, y, x * y);

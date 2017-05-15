@@ -1,9 +1,9 @@
 extern crate whiteread;
-use whiteread::{WhiteReader, Lengthed};
+use whiteread::{Reader, Lengthed};
 
 fn main() {
     let i = std::io::stdin();
-    let mut i = WhiteReader::new(i.lock());
+    let mut i = Reader::new(i.lock());
 
     println!("Type n and n pairs. Try inserting newlines in random places.");
     let Lengthed(v): Lengthed<(i32, i32)> = i.p();
