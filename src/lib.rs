@@ -712,7 +712,7 @@ impl<B: BufRead> Reader<B> {
     }
 
     /// Gets underlying buffer back.
-    pub fn unwrap(self) -> B {
+    pub fn into_inner(self) -> B {
         self.buf
     }
 }
