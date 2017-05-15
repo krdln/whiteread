@@ -5,7 +5,7 @@
 * Added `Skip` and `SkipAll` to handle ignored values.
 * Added `Zeroed` wrapper for parsing 0-terminated lists.
 * More consistend API for `WhiteReader`:
-    * Renamed `parse` to `continue` (to match `continue_line`)
+    * Added `continue_` as a synonym to `parse` (to match `continue_line`)
     * Added `finish` (as a `finish_line` counterpart)
 * Ensured that the crate can be pasted into a module
   and added a binary – now `cargo run` generates a template

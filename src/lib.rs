@@ -231,7 +231,7 @@ pub trait WhiteResultExt<T> {
     /// let f = try!( File::open("test.txt") );
     /// let mut i = Reader::new(BufReader::new(f));
     /// let mut s: i64 = 0;
-    /// while let Some(x) = try!( i.parse::<i64>().ok_or_none() ) { s += x }
+    /// while let Some(x) = try!( i.continue_::<i64>().ok_or_none() ) { s += x }
     /// Ok(s)
     /// # }
     ///
@@ -509,8 +509,8 @@ pub fn parse_string<T: White>(s: &str) -> Result<T> {
 /// let data = std::io::Cursor::new(b"1 2\n\n3 4 5\n6 7\n8\n" as &[u8]);
 /// let mut r = Reader::new(data);
 /// assert_eq!(r.next_line().unwrap().trim(), "1 2");
-/// assert_eq!(r.parse().ok(), Some(1));
-/// assert_eq!(r.parse().ok(), Some( (2, 3) ));   // continue_line would return `TooShort` here
+/// assert_eq!(r.continue_().ok(), Some(1));
+/// assert_eq!(r.continue_().ok(), Some( (2, 3) ));   // continue_line would return `TooShort` here
 /// assert_eq!(r.continue_line().ok(), Some(4)); // finish_line would return `Leftovers` here
 /// assert_eq!(r.start_line().ok(), Some(6));   // line would return `Leftovers` here
 /// assert_eq!(r.line().ok(), Some(8));
@@ -594,11 +594,19 @@ pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Reader<io::BufReader<File>>> 
 /// If they return other variants too, it is stated explicitely.
 impl<B: BufRead> Reader<B> {
     /// Parses a White value without specialy treating newlines (just like `scanf` or `cin>>`)
+    pub fn continue_<T: White>(&mut self) -> Result<T> {
+        White::read(self)
+    }
+
+    /// Same as `continue_`.
+    ///
+    /// Using `continue_` over `parse` is preferred, as it conveys better
+    /// which part of input will be parsed.
     pub fn parse<T: White>(&mut self) -> Result<T> {
         White::read(self)
     }
 
-    /// Just parse().unwrap().
+    /// Just .continue_().unwrap().
     ///
     /// Use it if you really value your time. ;)
     pub fn p<T: White>(&mut self) -> T {
@@ -692,10 +700,10 @@ impl<B: BufRead> Reader<B> {
 impl<B: BufRead> Reader<B> {
     /// Reads a new line and returns it.
     ///
-    /// This function should be used when `parse`-like functions
+    /// This function should be used when `White`-returning functions
     /// are insufficient or just to get a preview of a line.
     /// Note that line's content will not be considered consumed
-    /// and will be available for `parse` and `continue_line`.
+    /// and will be available for `continue_` and `continue_line`.
     pub fn next_line(&mut self) -> Result<&str> {
         if let None = self.read_line()? {
             return Err(TooShort);
