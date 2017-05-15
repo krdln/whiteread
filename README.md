@@ -13,6 +13,7 @@ and to be usable for parsing text input in format used in algorithmic contests.
 * Proper (`Result`, not panics) handling of errors⁰.
 * No unnecessary allocs and locks.
 * One-file copy-pastable implementation with no dependencies.
+  You can use `cargo run` to generate a template.
 
 ----
 ⁰) I wanted to just panic for simplicity, but then realized that one `unwrap()`
@@ -55,4 +56,4 @@ while let Ok((x, y)) = i.line::<(usize, f32)>() {
 }
 ```
 
-# [CHANGELOG](CHANGELOG.md)
+# [Changelog](CHANGELOG.md)

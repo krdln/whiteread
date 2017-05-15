@@ -11,3 +11,6 @@ repository = "https://github.com/krdln/whiteread"
 readme = "README.md"
 keywords = ["read", "parse", "input", "scanf", "whitespace"]
 license = "MIT"
+
+[dev-dependencies]
+tempfile = "2.1.5"

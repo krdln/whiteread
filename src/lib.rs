@@ -171,7 +171,7 @@ pub enum WhiteError {
     IoError(io::Error),
 }
 
-pub use WhiteError::*;
+pub use self::WhiteError::*;
 
 impl From<io::Error> for WhiteError {
     fn from(e: io::Error) -> WhiteError {
@@ -179,7 +179,7 @@ impl From<io::Error> for WhiteError {
     }
 }
 
-impl std::error::Error for WhiteError {
+impl ::std::error::Error for WhiteError {
     fn description(&self) -> &str {
         match *self {
             TooShort => "not enough input to parse a value",
@@ -189,7 +189,7 @@ impl std::error::Error for WhiteError {
         }
     }
 
-    fn cause(&self) -> Option<&std::error::Error> {
+    fn cause(&self) -> Option<&::std::error::Error> {
         match *self {
             IoError(ref e) => e.cause(),
             _ => None,
@@ -197,9 +197,9 @@ impl std::error::Error for WhiteError {
     }
 }
 
-impl std::fmt::Display for WhiteError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        use std::error::Error;
+impl ::std::fmt::Display for WhiteError {
+    fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+        use ::std::error::Error;
         match *self {
             IoError(ref e) => e.fmt(fmt),
             _ => fmt.write_str(self.description()),
@@ -443,7 +443,7 @@ impl<T: White + Default + PartialEq> White for Zeroed<T> {
 /// ```
 pub fn parse_line<T: White>() -> WhiteResult<T> {
     let mut line = String::new();
-    let n_bytes = std::io::stdin().read_line(&mut line)?;
+    let n_bytes = ::std::io::stdin().read_line(&mut line)?;
     if n_bytes == 0 {
         return Err(TooShort);
     }
@@ -528,8 +528,6 @@ pub fn parse_string<T: White>(s: &str) -> WhiteResult<T> {
 /// #     Err(TooShort) => (),
 /// #     _ => panic!()
 /// # }
-///
-/// # Errors
 /// ```
 pub struct WhiteReader<B: BufRead> {
     buf: B,

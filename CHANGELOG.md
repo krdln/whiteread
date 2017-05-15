@@ -7,6 +7,9 @@
 * More consistend API for `WhiteReader`:
     * Renamed `parse` to `continue` (to match `continue_line`)
     * Added `finish` (as a `finish_line` counterpart)
+* Ensured that the crate can be pasted into a module
+  and added a binary – now `cargo run` generates a template
+  with `mod whiteread`.
 
 ## 0.3.0 – 2016-06-10
 
