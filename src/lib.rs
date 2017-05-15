@@ -170,8 +170,6 @@ unsafe fn statify<T>(x: &T) -> &'static T {
 }
 
 /// # Constructors
-///
-/// Note: There's also [`open`](fn.open.html) constructor, which is a freestanding function.
 impl<B: BufRead> Reader<B> {
     /// Wraps a BufRead.
     ///
@@ -185,24 +183,40 @@ impl<B: BufRead> Reader<B> {
     }
 }
 
-/// Opens a file, and wraps in Reader
+impl Reader<io::BufReader<File>> {
+    /// Opens a file and wraps in Reader
+    ///
+    /// Shortcut for opening a file, wrapping it in a BufReader and then in a Reader.
+    ///
+    /// # Examples
+    ///
+    /// Read an integer from the beginning of file.
+    ///
+    /// ```no_run
+    /// # use whiteread::Reader;
+    /// let x: u32 = Reader::open("number.txt").unwrap().parse().unwrap();
+    /// ```
+    pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Reader<io::BufReader<File>>> {
+        let file = File::open(path)?;
+        Ok(Reader::new(io::BufReader::new(file)))
+    }
+}
+
+/// Parses a whole file as a `White` value
 ///
-/// Shortcut for creating a file, wrapping it in a BufReader and then in a Reader.
-///
-/// Note: this should be a static method on Reader, but currently it's
-/// impossible to implement it that way (it requires equality constraints in where clauses).
+/// If you want to parse the file in multiple steps,
+/// use [`Reader::open`](struct.Reader.html#method.open).
 ///
 /// # Examples
 ///
-/// Read an integer from a file.
+/// Parse the whole file as an tuple.
 ///
 /// ```no_run
-/// # use whiteread::open;
-/// let x: u32 = open("number.txt").unwrap().parse().unwrap();
+/// # use whiteread::parse_file;
+/// let x: (i32, i32) = parse_file("coords.txt").unwrap();
 /// ```
-pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Reader<io::BufReader<File>>> {
-    let file = File::open(path)?;
-    Ok(Reader::new(io::BufReader::new(file)))
+pub fn parse_file<T: White, P: AsRef<Path>>(path: P) -> Result<T> {
+    Reader::open(path)?.finish()
 }
 
 /// # Line-agnostic parsing
