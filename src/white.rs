@@ -191,6 +191,12 @@ impl<T: White, U: White, V: White> White for (T, U, V) {
     }
 }
 
+impl<T: White, U: White, V: White, W: White> White for (T, U, V, W) {
+    fn read<I: StrStream>(it: &mut I) -> Result<(T, U, V, W)> {
+        Ok((White::read(it)?, White::read(it)?, White::read(it)?, White::read(it)?))
+    }
+}
+
 impl White for () {
     fn read<I: StrStream>(_: &mut I) -> Result<()> {
         Ok(())
