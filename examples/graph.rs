@@ -1,22 +1,27 @@
 extern crate whiteread;
 
-fn read() -> Vec<Vec<u32>> {
+use whiteread::{Reader, ReaderResult};
+
+fn read() -> ReaderResult<Vec<Vec<u32>>> {
     let i = std::io::stdin();
-    let mut i = whiteread::Reader::new(i.lock());
+    let mut i = Reader::new(i.lock());
 
     // reading a graph in a format commonly used in algorithmic contests
-    let (verts, edges): (usize, usize) = i.line().unwrap();
+    let (verts, edges): (usize, usize) = i.line()?;
 
     let mut g = vec![vec![]; verts + 1];
     for _ in 0..edges {
-        let (a, b) = i.line().unwrap();
+        let (a, b) = i.line()?;
         g[a as usize].push(b);
         g[b as usize].push(a);
     }
 
-    g
+    Ok(g)
 }
 
 fn main() {
-    println!("{:?}", &read()[1..])
+    match read() {
+        Ok(graph) => println!("{:#?}", &graph[1..]),
+        Err(e) => println!("Error: {}", e),
+    }
 }
