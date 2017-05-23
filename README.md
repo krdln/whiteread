@@ -3,26 +3,25 @@ Yet another crate for easily reading values from strings or input.
 It was made to mimic `cin >>` functionality
 and to be usable for parsing text input in format used in algorithmic contests.
 
+### [Documentation (0.4.0)](https://docs.rs/whiteread/0.4.0/whiteread/)
+
+### [Crate](https://crates.io/crates/whiteread)
+
+### [Changelog](CHANGELOG.md)
+
 # Features:
 
 * Function-based interface (as opposed to macro-based one).
 * Simple: only whitespace can separate values, hence name.
   (so it's not a general solution for parsing arbitrary data).
 * Parsing in newline-agnostic mode (just like `cin >>`).
+  (Line-aware mode is also supported)
 * Easy detection of end of input.
-* Proper (`Result`, not panics) handling of errors⁰.
+* Proper (`Result`, not panics) handling of errors.
 * No unnecessary allocs and locks.
 * "One-file" copy-pastable implementation with no dependencies.
   This crate uses modules, but you can use `cargo run` to generate
-  a concatenated single-file template.
-
-----
-⁰) I wanted to just panic for simplicity, but then realized that one `unwrap()`
-doesn't hurt too much. But if you really want to force panics, we got you covered too!
-
-# [Documentation (0.3.0)](https://docs.rs/whiteread/0.3.0/whiteread/)
-
-# [Crate](https://crates.io/crates/whiteread)
+  a concatenated single-file template (see below).
 
 # Examples
 
@@ -63,4 +62,25 @@ Reading a file (can also use `Reader` for more control):
 let number: i32 = parse_file("number.txt").unwrap();
 ```
 
-# [Changelog](CHANGELOG.md)
+# Installation
+
+`cargo add whiteread` or add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+whiteread = "0.4.0"
+```
+
+## Using in non-Cargo environment
+
+If you want to use this crate where cargo is unavailable,
+*whiteread* can be squished into single file. Here's how
+to generate a template containing a *whiteread* module:
+
+```sh
+$ cargo install whiteread
+$ whiteread-template > my_file.rs
+```
+
+Alternatively, you can clone this repository and just
+`cargo run`.
