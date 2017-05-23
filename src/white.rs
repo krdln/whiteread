@@ -196,23 +196,23 @@ impl White for char {
     }
 }
 
-impl<T: White, U: White> White for (T, U) {
-    fn read<I: StrStream>(it: &mut I) -> Result<(T, U)> {
-        Ok((White::read(it)?, White::read(it)?))
-    }
+macro_rules! impl_tuple {
+    ( $($x:ident),* ) => {
+        impl< $( $x: White ),* > White for ( $( $x, )* ) {
+            fn read<I: StrStream>(_it: &mut I) -> Result<Self> {
+                Ok(( $( $x::read(_it)?, )* ))
+            }
+        }
+    };
 }
 
-impl<T: White, U: White, V: White> White for (T, U, V) {
-    fn read<I: StrStream>(it: &mut I) -> Result<(T, U, V)> {
-        Ok((White::read(it)?, White::read(it)?, White::read(it)?))
-    }
-}
-
-impl White for () {
-    fn read<I: StrStream>(_: &mut I) -> Result<()> {
-        Ok(())
-    }
-}
+impl_tuple!();
+impl_tuple!(A);
+impl_tuple!(A, B);
+impl_tuple!(A, B, C);
+impl_tuple!(A, B, C, D);
+impl_tuple!(A, B, C, D, E);
+impl_tuple!(A, B, C, D, E, F);
 
 impl<T: White> White for Vec<T> {
     fn read<I: StrStream>(it: &mut I) -> Result<Vec<T>> {
