@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.2 – 2017-05-24
+## 0.4.3 – 2017-05-24
 
 * Added `Skip` and `SkipAll` to handle ignored values.
 * Added `Zeroed` wrapper for parsing 0-terminated lists.

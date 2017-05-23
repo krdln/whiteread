@@ -1,4 +1,4 @@
-//! This module defines the [`White`] trait and some helpful structs.
+//! This module defines the `White` trait and some helpful structs.
 //!
 //! The [`White`] trait defines how to convert a
 //! [`StrStream`](../stream/trait.StrStream.html) (a stream of strings)

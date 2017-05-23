@@ -1,6 +1,6 @@
 //! Crate for reading whitespace-separated values.
 //!
-//! The crate defines a trait [`White`](trait.White.html), which
+//! The crate defines a trait [`White`](white/trait.White.html), which
 //! describes types that can be parsed from whitespace-separated words,
 //! which includes eg. integers, tuples and vectors.
 //!
@@ -24,7 +24,7 @@
 //! let x: i32 = parse_line().unwrap();
 //! ```
 //!
-//! Efficient reading from stdin (newline-agnostic) with [`Reader`](struct.Reader.html).
+//! Efficient reading from stdin (newline-agnostic) with [`Reader`](reader/struct.Reader.html).
 //! Stops on error.
 //!
 //! ```no_run
@@ -73,7 +73,7 @@ pub mod prelude {
 /// Leftovers are considered an error.
 /// This function locks a mutex and allocates a buffer, so
 /// don't use it when reading more than few lines –
-/// use [`Reader`](struct.Reader.html) instead.
+/// use [`Reader`](reader/struct.Reader.html) instead.
 ///
 /// # Examples
 /// ```no_run
@@ -120,7 +120,7 @@ pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
 /// ```
 ///
 /// If you want to parse the file in multiple steps,
-/// use [`Reader::open`](struct.Reader.html#method.open).
+/// use [`Reader::open`](reader/struct.Reader.html#method.open).
 ///
 /// # Examples
 ///
