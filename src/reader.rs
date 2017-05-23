@@ -171,13 +171,23 @@ impl<B: io::BufRead> Reader<B> {
     pub fn finish<T: White>(&mut self) -> BorrowedResult<T> {
         // safe -- WA for borrowck bug, should be fixed by NLL
         let value = unsafe { erase_lifetime(self) }.parse()?;
-        if let Ok(()) = White::read(self) {
+        if let Ok(Some(_)) = StrStream::next(self) {
             Err(Leftovers).add_lineinfo(self)
         } else {
             Ok(value)
         }
     }
 }
+
+#[test]
+fn test_finish() {
+    for input in &["1\n\n", "1", "1\n"] {
+        let mut reader = Reader::new(io::BufReader::new(input.as_bytes()));
+        let x: i32 = reader.finish().expect(&format!("failed at: {:?}", input));
+        assert_eq!(x, 1);
+    }
+}
+
 /// # Line-aware parsing
 ///
 /// Following methods parse some part of input into a White value.

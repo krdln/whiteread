@@ -3,7 +3,7 @@ Yet another crate for easily reading values from strings or input.
 It was made to mimic `cin >>` functionality
 and to be usable for parsing text input in format used in algorithmic contests.
 
-### [Documentation (0.4.1)](https://docs.rs/whiteread/0.4.1/whiteread/)
+### [Documentation (0.4.2)](https://docs.rs/whiteread/0.4.2/whiteread/)
 
 ### [Crate](https://crates.io/crates/whiteread)
 
@@ -68,7 +68,7 @@ let number: i32 = parse_file("number.txt").unwrap();
 
 ```toml
 [dependencies]
-whiteread = "0.4.1"
+whiteread = "0.4.2"
 ```
 
 ## Using in non-Cargo environment
