@@ -1,6 +1,6 @@
 //! This module defines the `White` trait and some helpful structs.
 
-use super::StrStream;
+use super::stream::StrStream;
 use std::io;
 use std::result;
 
@@ -72,6 +72,37 @@ pub enum Error {
 }
 pub use self::Error::*;
 
+/// # Variants checking
+impl Error {
+    pub fn is_too_short(&self) -> bool {
+        match *self {
+            TooShort => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_leftovers(&self) -> bool {
+        match *self {
+            Leftovers => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_parse_error(&self) -> bool {
+        match *self {
+            ParseError => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_io_error(&self) -> bool {
+        match *self {
+            IoError(_) => true,
+            _ => false,
+        }
+    }
+}
+
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Error {
         IoError(e)
@@ -106,46 +137,14 @@ impl ::std::fmt::Display for Error {
     }
 }
 
-// ~ impl From<Error> for io::Error {
-// TODO
-// ~ }
-
-/// Trait providing additional methods on `Result`.
-pub trait WhiteResultExt<T> {
-    /// Propagates an error, unless it's TooShort (returns None in that case).
-    ///
-    /// If that description is confusing, check out [src].
-    ///
-    /// # Examples
-    ///
-    /// Summing integers from a file with proper error handling.
-    ///
-    /// ```no_run
-    /// # use whiteread::Reader;
-    /// use whiteread::WhiteResultExt;
-    /// # use std::fs::File;
-    /// # use std::io::BufReader;
-    /// # fn test() -> whiteread::Result<i64> {
-    /// let f = try!( File::open("test.txt") );
-    /// let mut i = Reader::new(BufReader::new(f));
-    /// let mut s: i64 = 0;
-    /// while let Some(x) = try!( i.continue_::<i64>().ok_or_none() ) { s += x }
-    /// Ok(s)
-    /// # }
-    ///
-    fn ok_or_none(self) -> Result<Option<T>>;
-}
-
-impl<T> WhiteResultExt<T> for Result<T> {
-    fn ok_or_none(self) -> Result<Option<T>> {
-        match self {
-            Ok(x) => Ok(Some(x)),
-            Err(TooShort) => Ok(None),
-            Err(e) => Err(e),
+impl From<Error> for io::Error {
+    fn from(e: Error) -> io::Error {
+        match e {
+            IoError(e) => e,
+            e => io::Error::new(io::ErrorKind::InvalidData, e),
         }
     }
 }
-
 // not using T: FromStr here because of coherence and tuples
 macro_rules! white {
     ($T:ident) => (
@@ -200,8 +199,11 @@ impl White for () {
 impl<T: White> White for Vec<T> {
     fn read<I: StrStream>(it: &mut I) -> Result<Vec<T>> {
         let mut v = vec![];
-        while let Some(x) = White::read(it).ok_or_none()? {
-            v.push(x);
+        loop {
+            match White::read(it) {
+                Err(TooShort) => break,
+                x => v.push(x?),
+            }
         }
         Ok(v)
     }
@@ -288,13 +290,12 @@ impl<T: White> White for Lengthed<T> {
     fn read<I: StrStream>(it: &mut I) -> Result<Lengthed<T>> {
         let sz = White::read(it)?;
         let mut v = Vec::with_capacity(sz);
-        while let Some(x) = White::read(it).ok_or_none()? {
-            v.push(x);
+        loop {
+            v.push(White::read(it)?);
             if v.len() == sz {
                 return Ok(Lengthed(v));
             }
         }
-        Err(TooShort)
     }
 }
 
@@ -302,7 +303,8 @@ impl<T: White> White for Lengthed<T> {
 ///
 /// # Examples
 /// ```
-/// # use whiteread::{parse_string, Zeroed, Error};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::{Zeroed, Error};
 /// let (Zeroed(v), _): (Zeroed<u8>, String) = parse_string("20 21 22 0 foo").unwrap();
 /// assert_eq!(v, &[20, 21, 22]);
 ///

@@ -14,6 +14,7 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
         "whiteread" => include_str!("lib.rs"),
         "stream" => include_str!("stream.rs"),
         "white" => include_str!("white.rs"),
+        "reader" => include_str!("reader.rs"),
         x => panic!("whiteread-template: unknown module {}", x),
     };
 
@@ -23,7 +24,8 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
             continue;
         }
 
-        if trimmed.starts_with("mod") || trimmed.starts_with("pub mod") {
+        if (trimmed.starts_with("mod") || trimmed.starts_with("pub mod"))
+        && trimmed.ends_with(";") {
             let name = trimmed
                 .split("mod").nth(1).unwrap()
                 .split(";").nth(0).unwrap()
@@ -45,13 +47,20 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
 fn write_template<W: Write>(mut w: W) -> io::Result<()> {
     write!(w, "{}", &r"
 use whiteread as w;
+use w::prelude::*;
 
-fn main() {
+fn run() -> w::ReaderResult<()> {
     let input = std::io::stdin();
     let input = input.lock();
     let mut input = w::Reader::new(input);
     
-    let _x: i32 = input.line().unwrap();
+    let _x: i32 = input.line()?;
+
+    Ok(())
+}
+
+fn main() {
+    run().pretty_unwrap()
 }
 
 // From https://github.com/krdln/whiteread on MIT license

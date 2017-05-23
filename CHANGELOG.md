@@ -4,7 +4,7 @@
 
 * Added `Skip` and `SkipAll` to handle ignored values.
 * Added `Zeroed` wrapper for parsing 0-terminated lists.
-* More consistend API for `WhiteReader`:
+* More consistent API for `WhiteReader`:
     * Added `continue_` as a synonym to `parse` (to match `continue_line`)
     * Added `finish` (as a `finish_line` counterpart)
     * Renamed `unwrap` to `into_inner`
@@ -14,6 +14,8 @@
   and added a binary – now `cargo run` generates a template
   with `mod whiteread`.
 * Split crate into multiple modules.
+* Added separate Error types for Reader, which can `Display`
+  the error location in a nice way.
 
 ## 0.3.0 – 2016-06-10
 
