@@ -57,4 +57,10 @@ while let Ok((x, y)) = i.line::<(usize, f32)>() {
 }
 ```
 
+Reading a file (can also use `Reader` for more control):
+
+```rust
+let number: i32 = parse_file("number.txt").unwrap();
+```
+
 # [Changelog](CHANGELOG.md)
