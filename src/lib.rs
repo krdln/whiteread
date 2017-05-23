@@ -36,8 +36,9 @@
 //! }
 //! ```
 //!
-//! If you want better error handling in while-let loops,
-//! use [`ok_or_none`](trait.WhiteResultExt.html#tymethod.none_on_too_short)
+//! If you want better error handling in while-let loops
+//! (stop on end of input, but propagate all the other errors),
+//! use [`none_on_too_short`](reader/trait.BorrowedResultExt.html#tymethod.none_on_too_short)
 
 use std::path::Path;
 use std::io;
@@ -54,6 +55,12 @@ pub use self::reader::OwnedError as ReaderError;
 pub use self::reader::OwnedResult as ReaderResult;
 
 /// Reexports of traits containing the extension methods.
+///
+/// The prelude is usually glob-imported:
+///
+/// ```
+/// use whiteread::prelude::*;
+/// ```
 pub mod prelude {
     pub use super::reader::BorrowedResultExt;
     pub use super::reader::PrettyUnwrap;
@@ -99,6 +106,18 @@ pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
 }
 
 /// Parses a whole file as a `White` value
+///
+/// Calling this function is equivalent to:
+///
+/// ```no_run
+/// # use whiteread::{Reader, ReaderResult, White};
+/// # fn foo<T: White>() -> ReaderResult<T> {
+/// # let path = "foo";
+/// # Ok(
+/// Reader::open(path)?.finish()?
+/// # )
+/// # }
+/// ```
 ///
 /// If you want to parse the file in multiple steps,
 /// use [`Reader::open`](struct.Reader.html#method.open).

@@ -53,7 +53,7 @@ fn run() -> w::ReaderResult<()> {
     let input = std::io::stdin();
     let input = input.lock();
     let mut input = w::Reader::new(input);
-    
+
     let _x: i32 = input.line()?;
 
     Ok(())

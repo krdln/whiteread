@@ -16,6 +16,7 @@
 * Split crate into multiple modules.
 * Added separate Error types for Reader, which can `Display`
   the error location in a nice way.
+* Fix bug in reading empty vector using `Lengthed`.
 
 ## 0.3.0 – 2016-06-10
 
