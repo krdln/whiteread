@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (upcoming)
+## 0.4.1 – 2017-05-24
 
 * Added `Skip` and `SkipAll` to handle ignored values.
 * Added `Zeroed` wrapper for parsing 0-terminated lists.
@@ -17,6 +17,7 @@
 * Added separate Error types for Reader, which can `Display`
   the error location in a nice way.
 * Fix bug in reading empty vector using `Lengthed`.
+* More impls for tuples (up to 6)
 
 ## 0.3.0 – 2016-06-10
 

@@ -37,7 +37,7 @@ use std::result;
 /// ```
 /// # use whiteread::parse_string;
 /// # use whiteread::{Skip, Lengthed};
-/// // tuples (up to 3)
+/// // tuples (up to 6)
 /// assert_eq!(parse_string("2 1 3 4").ok(), Some( ((2, 1), (3, 4)) ));
 ///
 /// // eager vector
