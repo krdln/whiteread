@@ -5,8 +5,7 @@ authors = ["Michał Krasnoborski <mkrdln@gmail.com>"]
 
 description = "Crate for easily reading whitespace-separated values from strings or input."
 
-documentation = "http://krdln.github.io/whiteread/whiteread/index.html"
-homepage = "https://github.com/krdln/whiteread"
+documentation = "https://docs.rs/whiteread/0.4.0/whiteread/"
 repository = "https://github.com/krdln/whiteread"
 readme = "README.md"
 keywords = ["read", "input", "scanf", "whitespace", "iostreams"]

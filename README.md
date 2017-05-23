@@ -20,7 +20,7 @@ and to be usable for parsing text input in format used in algorithmic contests.
 ⁰) I wanted to just panic for simplicity, but then realized that one `unwrap()`
 doesn't hurt too much. But if you really want to force panics, we got you covered too!
 
-# [Documentation (0.3.0)](http://krdln.github.io/whiteread/whiteread/index.html)
+# [Documentation (0.3.0)](https://docs.rs/whiteread/0.3.0/whiteread/)
 
 # [Crate](https://crates.io/crates/whiteread)
 
