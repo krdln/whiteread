@@ -578,7 +578,7 @@ pub trait BorrowedResultExt<'a, T> {
     /// fn sum_file() -> whiteread::ReaderResult<i64> {
     ///     let mut reader = Reader::open("numbers.txt")?;
     ///     let mut s: i64 = 0;
-    ///     while let Some(x) = reader.continue_().none_on_too_short()? {
+    ///     while let Some(x) = reader.continue_::<i64>().none_on_too_short()? {
     ///         s += x
     ///     }
     ///     Ok(s)
