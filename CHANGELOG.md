@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.4 – 2017-11-19
+
+* Added a type annotation in a test (needed due to rust/pull/44287)
+
 ## 0.4.3 – 2017-05-24
 
 * Added `Skip` and `SkipAll` to handle ignored values.
