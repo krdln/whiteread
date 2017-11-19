@@ -427,6 +427,15 @@ impl<'a> BorrowedError<'a> {
     }
 }
 
+#[test]
+fn test_location() {
+    let mut reader = Reader::new(io::Cursor::new(b"\n\n\n\n a 2"));
+    let error = reader.continue_::<u8>().unwrap_err();
+    assert_eq!(error.location(), Some((5, 2)));
+    let error = error.to_owned();
+    assert_eq!(error.location(), Some((5, 2)));
+}
+
 impl OwnedError {
     /// Obtains an underlying error, by stripping the location info.
     ///

@@ -18,9 +18,17 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
         x => panic!("whiteread-template: unknown module {}", x),
     };
 
-    for line in source.lines() {
+    let mut lines = source.lines();
+    while let Some(line) = lines.next() {
         let trimmed = line.trim();
         if trimmed.is_empty() || trimmed.starts_with("//") {
+            continue;
+        }
+
+        if trimmed == "#[test]" {
+            let ident = ident_len(line);
+            while ident_len(lines.next().unwrap()) == ident {}
+            while ident_len(lines.next().unwrap()) > ident {}
             continue;
         }
 
@@ -42,6 +50,11 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
     writeln!(w, "}}")?;
 
     Ok(())
+}
+
+fn ident_len(line: &str) -> usize {
+    if line.trim() == "" { return usize::max_value() }
+    line.chars().take_while(|c| c.is_whitespace()).count()
 }
 
 fn write_template<W: Write>(mut w: W) -> io::Result<()> {
