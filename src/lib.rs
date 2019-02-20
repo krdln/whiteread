@@ -46,8 +46,7 @@ use std::path::Path;
 pub mod stream;
 
 pub mod white;
-pub use self::white::{Leftovers, ParseError, TooShort};
-pub use self::white::{Lengthed, Skip, SkipAll, White, Zeroed};
+pub use self::white::White;
 
 pub mod reader;
 pub use self::reader::OwnedError as ReaderError;
@@ -99,7 +98,7 @@ pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
     let value = White::read(&mut stream)?;
 
     if let Ok(Some(_)) = stream::StrStream::next(&mut stream) {
-        Err(Leftovers)
+        Err(white::Error::Leftovers)
     } else {
         Ok(value)
     }

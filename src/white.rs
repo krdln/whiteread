@@ -36,7 +36,7 @@ use std::result;
 ///
 /// ```
 /// # use whiteread::parse_string;
-/// # use whiteread::{Skip, Lengthed};
+/// # use whiteread::white::{Skip, Lengthed};
 /// // tuples (up to 6)
 /// assert_eq!(parse_string("2 1 3 4").ok(), Some( ((2, 1), (3, 4)) ));
 ///
@@ -69,7 +69,8 @@ pub type Result<T> = result::Result<T, Error>;
 /// # Examples
 ///
 /// ```
-/// # use whiteread::{parse_string, TooShort, Leftovers, ParseError};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::Error::*;
 /// if let Err(TooShort) = parse_string::<(u8, u16)>("1") {} else { panic!(); }
 /// if let Err(Leftovers) = parse_string::<char>("x y z") {} else { panic!(); }
 /// if let Err(ParseError) = parse_string::<i32>("seven") {} else { panic!(); }
@@ -88,57 +89,56 @@ pub enum Error {
     /// IO Error occured.
     IoError(io::Error),
 }
-pub use self::Error::*;
 
 /// # Variants checking
 impl Error {
     pub fn is_too_short(&self) -> bool {
         match *self {
-            TooShort => true,
+            Error::TooShort => true,
             _ => false,
         }
     }
 
     pub fn is_leftovers(&self) -> bool {
         match *self {
-            Leftovers => true,
+            Error::Leftovers => true,
             _ => false,
         }
     }
 
     pub fn is_parse_error(&self) -> bool {
         match *self {
-            ParseError => true,
+            Error::ParseError => true,
             _ => false,
         }
     }
 
     pub fn is_io_error(&self) -> bool {
         match *self {
-            IoError(_) => true,
+            Error::IoError(_) => true,
             _ => false,
         }
     }
 }
 
 impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Error { IoError(e) }
+    fn from(e: io::Error) -> Error { Error::IoError(e) }
 }
 
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            TooShort => "not enough input to parse a value",
-            Leftovers => "excessive input provided",
-            ParseError => "parse error occured",
-            IoError(ref e) => e.description(),
+            Error::TooShort => "not enough input to parse a value",
+            Error::Leftovers => "excessive input provided",
+            Error::ParseError => "parse error occured",
+            Error::IoError(ref e) => e.description(),
         }
     }
 
     fn cause(&self) -> Option<&::std::error::Error> {
         #[allow(deprecated)] // Rust 1.15 doesn't have Error::source yet
         match *self {
-            IoError(ref e) => e.cause(),
+            Error::IoError(ref e) => e.cause(),
             _ => None,
         }
     }
@@ -146,9 +146,9 @@ impl ::std::error::Error for Error {
 
 impl ::std::fmt::Display for Error {
     fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        use std::error::Error;
+        use std::error::Error as _StdError;
         match *self {
-            IoError(ref e) => e.fmt(fmt),
+            Error::IoError(ref e) => e.fmt(fmt),
             _ => fmt.write_str(self.description()),
         }
     }
@@ -157,7 +157,7 @@ impl ::std::fmt::Display for Error {
 impl From<Error> for io::Error {
     fn from(e: Error) -> io::Error {
         match e {
-            IoError(e) => e,
+            Error::IoError(e) => e,
             e => io::Error::new(io::ErrorKind::InvalidData, e),
         }
     }
@@ -168,8 +168,8 @@ macro_rules! white {
         impl White for $T {
             fn read<I: StrStream>(it: &mut I) -> Result<$T> {
                 try!(it.next())
-                    .ok_or(TooShort)
-                    .and_then(|s| s.parse().or(Err(ParseError)))
+                    .ok_or(Error::TooShort)
+                    .and_then(|s| s.parse().or(Err(Error::ParseError)))
             }
         }
     };
@@ -193,7 +193,7 @@ white!(f64);
 impl White for char {
     fn read<I: StrStream>(it: &mut I) -> Result<char> {
         let s = it.next()?;
-        s.and_then(|s| s.chars().next()).ok_or(TooShort)
+        s.and_then(|s| s.chars().next()).ok_or(Error::TooShort)
     }
 }
 
@@ -220,7 +220,7 @@ impl<T: White> White for Vec<T> {
         let mut v = vec![];
         loop {
             match White::read(it) {
-                Err(TooShort) => break,
+                Err(Error::TooShort) => break,
                 x => v.push(x?),
             }
         }
@@ -235,7 +235,8 @@ impl<T: White> White for Vec<T> {
 /// Providing type hint
 ///
 /// ```
-/// # use whiteread::{parse_string, Skip};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::Skip;
 /// let (_, x, _): (Skip, i32, Skip) = parse_string("foo 5 30").unwrap();
 /// assert_eq!(x, 5);
 /// ```
@@ -243,7 +244,8 @@ impl<T: White> White for Vec<T> {
 /// Relying on type inference (for some reason, {} are mandatory)
 ///
 /// ```
-/// # use whiteread::{parse_string, Skip};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::Skip;
 /// let (Skip{}, x, Skip{}) = parse_string("foo 5 30").unwrap();
 /// let x: i32 = x;
 /// assert_eq!(x, 5);
@@ -270,7 +272,8 @@ impl White for Skip {
 /// Providing type hint
 ///
 /// ```
-/// # use whiteread::{parse_string, SkipAll};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::SkipAll;
 /// let (s, x, _): (String, i32, SkipAll) = parse_string("foo 5 ... ... ...").unwrap();
 /// assert_eq!((s, x), ("foo".to_owned(), 5));
 /// ```
@@ -278,7 +281,8 @@ impl White for Skip {
 /// Relying on type inference (for some reason, {} are mandatory)
 ///
 /// ```
-/// # use whiteread::{parse_string, SkipAll};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::SkipAll;
 /// let (s, x, SkipAll{}) = parse_string("foo 5").unwrap();
 /// let x: i32 = x;
 /// let s: String = s;
@@ -298,7 +302,8 @@ impl White for SkipAll {
 ///
 /// # Examples
 /// ```
-/// # use whiteread::{parse_string, Lengthed};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::Lengthed;
 /// let Lengthed(v): Lengthed<u8> = parse_string("3 5 6 7").unwrap();
 /// assert_eq!(v, &[5, 6, 7]);
 ///
@@ -338,7 +343,8 @@ impl<T: White> White for Lengthed<T> {
 /// the full "zeroed" element should be provided:
 ///
 /// ```
-/// # use whiteread::{parse_string, Lengthed, Zeroed};
+/// # use whiteread::parse_string;
+/// # use whiteread::white::{Lengthed, Zeroed};
 /// let _: Zeroed<(i32, i32)> = parse_string("22 33  44 55  0 0").unwrap();
 /// let _: Zeroed<Lengthed<String>> = parse_string("3 a b c  2 d e  0").unwrap();
 /// ```

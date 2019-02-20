@@ -51,7 +51,8 @@ use super::stream::StrStream;
 /// Overview of how various methods handle newlines:
 ///
 /// ```
-/// # use whiteread::{Reader, TooShort};
+/// # use whiteread::Reader;
+/// # use whiteread::white::Error::TooShort;
 /// # use whiteread::prelude::*;
 /// let data = std::io::Cursor::new(
 /// br"1 2
@@ -166,7 +167,7 @@ impl<B: io::BufRead> Reader<B> {
         // safe -- WA for borrowck bug, should be fixed by NLL
         let value = unsafe { erase_lifetime(self) }.parse()?;
         if let Ok(Some(_)) = StrStream::next(self) {
-            Err(Leftovers).add_lineinfo(self)
+            Err(white::Error::Leftovers).add_lineinfo(self)
         } else {
             Ok(value)
         }
@@ -487,7 +488,7 @@ impl<'a> From<BorrowedError<'a>> for Box<StdError + Send + Sync> {
 impl<'a> From<io::Error> for BorrowedError<'a> {
     fn from(e: io::Error) -> BorrowedError<'a> {
         BorrowedError {
-            error: white::IoError(e),
+            error: white::Error::IoError(e),
             row: 0,
             col: 0,
             line: "",
