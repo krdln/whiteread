@@ -10,7 +10,7 @@ use std::path::Path;
 
 use super::stream;
 use super::stream::Error::*;
-use super::White;
+use super::FromStream;
 
 use super::stream::SplitAsciiWhitespace;
 use super::stream::StrStream;
@@ -130,7 +130,7 @@ impl Reader<io::BufReader<fs::File>> {
 
 /// # Line-agnostic parsing
 ///
-/// Following methods parse some part of input into a White value.
+/// Following methods parse some part of input into a FromStream value.
 ///
 /// ## Errors
 ///
@@ -138,23 +138,23 @@ impl Reader<io::BufReader<fs::File>> {
 /// [`TooShort`, `ParseError` or `IoError`](../white/enum.Error.html) error variant.
 /// If they return other variants too, it is stated explicitely.
 impl<B: io::BufRead> Reader<B> {
-    /// Parses a White value without specialy treating newlines (just like `scanf` or `cin>>`)
-    pub fn continue_<T: White>(&mut self) -> BorrowedResult<T> {
-        White::read(self).add_lineinfo(self)
+    /// Parses a FromStream value without specialy treating newlines (just like `scanf` or `cin>>`)
+    pub fn continue_<T: FromStream>(&mut self) -> BorrowedResult<T> {
+        FromStream::read(self).add_lineinfo(self)
     }
 
     /// Same as `continue_`.
     ///
     /// Using `continue_` over `parse` is preferred, as it conveys better
     /// which part of input will be parsed.
-    pub fn parse<T: White>(&mut self) -> BorrowedResult<T> { White::read(self).add_lineinfo(self) }
+    pub fn parse<T: FromStream>(&mut self) -> BorrowedResult<T> { FromStream::read(self).add_lineinfo(self) }
 
     /// Just .continue_().unwrap().
     ///
     /// Use it if you really value your time. ;)
-    pub fn p<T: White>(&mut self) -> T { self.parse().unwrap() }
+    pub fn p<T: FromStream>(&mut self) -> T { self.parse().unwrap() }
 
-    /// Parses remaining part of reader into White value
+    /// Parses remaining part of reader into FromStream value
     /// in a line-agnostic way.
     ///
     /// It could be used with `T=()`, to just check if we're at the EOF.
@@ -163,7 +163,7 @@ impl<B: io::BufRead> Reader<B> {
     ///
     /// Additionaly to usual parse errors, this method may also return
     /// [`Leftovers`](../white/enum.Error.html#variant.Leftovers).
-    pub fn finish<T: White>(&mut self) -> BorrowedResult<T> {
+    pub fn finish<T: FromStream>(&mut self) -> BorrowedResult<T> {
         // safe -- WA for borrowck bug, should be fixed by NLL
         let value = unsafe { erase_lifetime(self) }.parse()?;
         if let Ok(Some(_)) = StrStream::next(self) {
@@ -185,7 +185,7 @@ fn test_finish() {
 
 /// # Line-aware parsing
 ///
-/// Following methods parse some part of input into a White value.
+/// Following methods parse some part of input into a FromStream value.
 ///
 /// ## Errors
 ///
@@ -211,7 +211,7 @@ impl<B: io::BufRead> Reader<B> {
         ret
     }
 
-    /// Reads a new line from input and parses it into White value **as a whole**.
+    /// Reads a new line from input and parses it into FromStream value **as a whole**.
     ///
     /// The function is called just `line` for brevity and also to
     /// make it look different than global `read_line` to avoid mistakes.
@@ -219,33 +219,33 @@ impl<B: io::BufRead> Reader<B> {
     /// ### Errors
     ///
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
-    pub fn line<T: White>(&mut self) -> BorrowedResult<T> {
+    pub fn line<T: FromStream>(&mut self) -> BorrowedResult<T> {
         if let None = self.read_line()? {
             return Err(TooShort).add_lineinfo(self);
         };
         self.finish_line()
     }
 
-    /// Reads a new line from input and parses some part of it into White value.
-    pub fn start_line<T: White>(&mut self) -> BorrowedResult<T> {
+    /// Reads a new line from input and parses some part of it into FromStream value.
+    pub fn start_line<T: FromStream>(&mut self) -> BorrowedResult<T> {
         if let None = self.read_line()? {
             return Err(TooShort).add_lineinfo(self);
         };
         self.continue_line()
     }
 
-    /// Parses some part of current line into White value.
-    pub fn continue_line<T: White>(&mut self) -> BorrowedResult<T> {
+    /// Parses some part of current line into FromStream value.
+    pub fn continue_line<T: FromStream>(&mut self) -> BorrowedResult<T> {
         let result = {
             let mut splitter = SplitAsciiWhitespace::from_parts(&self.line, self.col);
-            let result = White::read(&mut splitter);
+            let result = FromStream::read(&mut splitter);
             self.col = splitter.position();
             result
         };
         result.add_lineinfo(self)
     }
 
-    /// Parses remaining part of current line into White value.
+    /// Parses remaining part of current line into FromStream value.
     ///
     /// It could be used with `T=()`, to just check if we're on the end of line.
     ///
@@ -253,7 +253,7 @@ impl<B: io::BufRead> Reader<B> {
     ///
     /// Additionaly to usual parse errors, this method may also return
     /// [`Leftovers`](../white/enum.Error.html#variant.Leftovers).
-    pub fn finish_line<T: White>(&mut self) -> BorrowedResult<T> {
+    pub fn finish_line<T: FromStream>(&mut self) -> BorrowedResult<T> {
         // safe -- WA for borrowck bug, should be fixed by NLL
         let value = unsafe { erase_lifetime(self) }.continue_line()?;
         if let Some(_) = self.next_within_line() {
@@ -268,7 +268,7 @@ impl<B: io::BufRead> Reader<B> {
 impl<B: io::BufRead> Reader<B> {
     /// Reads a new line and returns it.
     ///
-    /// This function should be used when `White`-returning functions
+    /// This function should be used when `FromStream`-returning functions
     /// are insufficient or just to get a preview of a line.
     /// Note that line's content will not be considered consumed
     /// and will be available for `continue_` and `continue_line`.

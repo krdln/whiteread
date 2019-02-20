@@ -1,13 +1,13 @@
-//! This module defines adapters for `White` trait.
+//! This module defines adapters for `FromStream` trait.
 //!
 //! This module contains a few structs, which implement
-//! [`White`] in a special way. Eg. `Skip` serves the role
+//! [`FromStream`] in a special way. Eg. `Skip` serves the role
 //! of a placeholder, and `Lengthed` allows to read a vector
 //! prepended by its length.
 //!
-//! [`White`]: ../stream/trait.White.html
+//! [`FromStream`]: ../stream/trait.FromStream.html
 
-use super::stream::{StrStream, White, Result};
+use super::stream::{StrStream, FromStream, Result};
 
 /// Used to consume and ignore one whitespace-separated value
 ///
@@ -34,7 +34,7 @@ use super::stream::{StrStream, White, Result};
 #[derive(Default, Debug, Eq, PartialEq)]
 pub struct Skip;
 
-impl White for Skip {
+impl FromStream for Skip {
     fn read<I: StrStream>(it: &mut I) -> Result<Skip> {
         it.next()?;
         Ok(Skip)
@@ -72,7 +72,7 @@ impl White for Skip {
 #[derive(Default, Debug, Eq, PartialEq)]
 pub struct SkipAll;
 
-impl White for SkipAll {
+impl FromStream for SkipAll {
     fn read<I: StrStream>(it: &mut I) -> Result<SkipAll> {
         while let Some(_) = it.next()? {}
         Ok(SkipAll)
@@ -94,15 +94,15 @@ impl White for SkipAll {
 #[derive(Default, Debug, Eq, PartialEq)]
 pub struct Lengthed<T>(pub Vec<T>);
 
-impl<T: White> White for Lengthed<T> {
+impl<T: FromStream> FromStream for Lengthed<T> {
     fn read<I: StrStream>(it: &mut I) -> Result<Lengthed<T>> {
-        let sz = White::read(it)?;
+        let sz = FromStream::read(it)?;
         let mut v = Vec::with_capacity(sz);
         loop {
             if v.len() == sz {
                 return Ok(Lengthed(v));
             }
-            v.push(White::read(it)?);
+            v.push(FromStream::read(it)?);
         }
     }
 }
@@ -133,12 +133,12 @@ impl<T: White> White for Lengthed<T> {
 #[derive(Default, Debug)]
 pub struct Zeroed<T>(pub Vec<T>);
 
-impl<T: White + Default + PartialEq> White for Zeroed<T> {
+impl<T: FromStream + Default + PartialEq> FromStream for Zeroed<T> {
     fn read<I: StrStream>(it: &mut I) -> Result<Zeroed<T>> {
         let mut v = vec![];
         let zero = Default::default();
         loop {
-            let x = White::read(it)?;
+            let x = FromStream::read(it)?;
             if x == zero {
                 return Ok(Zeroed(v));
             } else {

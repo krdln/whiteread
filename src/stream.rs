@@ -1,8 +1,8 @@
-//! This module defines the `StrStream` and `White` traits
+//! This module defines the `StrStream` and `FromStream` traits
 //!
-//! The [`White`] trait defines how to convert a
+//! The [`FromStream`] trait defines how to convert a
 //! [`StrStream`](trait.StrStream.html) (a stream of strings)
-//! to a value. See [its definition][`White`] for more documentation.
+//! to a value. See [its definition][`FromStream`] for more documentation.
 
 use std::io;
 use std::str::SplitWhitespace;
@@ -93,9 +93,9 @@ impl StrExt for str {
 /// Using a trait directly
 ///
 /// ```
-/// use whiteread::White;
+/// use whiteread::FromStream;
 /// let mut stream = "123".split_whitespace();
-/// assert_eq!(<i32 as White>::read(&mut stream).unwrap(), 123)
+/// assert_eq!(<i32 as FromStream>::read(&mut stream).unwrap(), 123)
 /// ```
 ///
 /// Semantics of provided trait implementations:
@@ -120,15 +120,15 @@ impl StrExt for str {
 /// ```
 ///
 /// There are a few more structs in this module,
-/// which implement the `White` trait in various way.
+/// which implement the `FromStream` trait in various way.
 /// See their definition for more explanation.
-pub trait White: Sized {
+pub trait FromStream: Sized {
     fn read<I: StrStream>(it: &mut I) -> Result<Self>;
 }
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-/// Error which can occur while parsing `White` object.
+/// Error which can occur while parsing `FromStream` object.
 ///
 /// It's convertible into `io::Error`, so it composes well with other reading functions.
 ///
@@ -231,7 +231,7 @@ impl From<Error> for io::Error {
 // not using T: FromStr here because of coherence and tuples
 macro_rules! white {
     ($T:ident) => {
-        impl White for $T {
+        impl FromStream for $T {
             fn read<I: StrStream>(it: &mut I) -> Result<$T> {
                 try!(it.next())
                     .ok_or(Error::TooShort)
@@ -256,7 +256,7 @@ white!(String);
 white!(f32);
 white!(f64);
 
-impl White for char {
+impl FromStream for char {
     fn read<I: StrStream>(it: &mut I) -> Result<char> {
         let s = it.next()?;
         s.and_then(|s| s.chars().next()).ok_or(Error::TooShort)
@@ -265,7 +265,7 @@ impl White for char {
 
 macro_rules! impl_tuple {
     ( $($x:ident),* ) => {
-        impl< $( $x: White ),* > White for ( $( $x, )* ) {
+        impl< $( $x: FromStream ),* > FromStream for ( $( $x, )* ) {
             fn read<I: StrStream>(_it: &mut I) -> Result<Self> {
                 Ok(( $( $x::read(_it)?, )* ))
             }
@@ -281,11 +281,11 @@ impl_tuple!(A, B, C, D);
 impl_tuple!(A, B, C, D, E);
 impl_tuple!(A, B, C, D, E, F);
 
-impl<T: White> White for Vec<T> {
+impl<T: FromStream> FromStream for Vec<T> {
     fn read<I: StrStream>(it: &mut I) -> Result<Vec<T>> {
         let mut v = vec![];
         loop {
-            match White::read(it) {
+            match FromStream::read(it) {
                 Err(Error::TooShort) => break,
                 x => v.push(x?),
             }

@@ -1,6 +1,6 @@
 //! Crate for reading whitespace-separated values.
 //!
-//! The crate defines a trait [`White`](stream/trait.White.html), which
+//! The crate defines a trait [`FromStream`](stream/trait.FromStream.html), which
 //! describes types that can be parsed from whitespace-separated words,
 //! which includes eg. integers, tuples and vectors.
 //!
@@ -44,7 +44,7 @@ use std::io;
 use std::path::Path;
 
 pub mod stream;
-pub use self::stream::White;
+pub use self::stream::FromStream;
 
 pub mod adapters;
 
@@ -67,7 +67,7 @@ pub mod prelude {
 
 // Helpers -----------------------------------------------------------------------------------------
 
-/// Helper function for parsing `White` value from one line of stdin.
+/// Helper function for parsing `FromStream` value from one line of stdin.
 ///
 /// Leftovers are considered an error.
 /// This function locks a mutex and allocates a buffer, so
@@ -79,13 +79,13 @@ pub mod prelude {
 /// # use whiteread::parse_line;
 /// let x: i32 = parse_line().unwrap();
 /// ```
-pub fn parse_line<T: White>() -> stream::Result<T> {
+pub fn parse_line<T: FromStream>() -> stream::Result<T> {
     let mut line = String::new();
     io::stdin().read_line(&mut line)?;
     parse_string(&line)
 }
 
-/// Helper function for parsing `White` value from string. Leftovers are considered an error.
+/// Helper function for parsing `FromStream` value from string. Leftovers are considered an error.
 ///
 /// # Examples
 /// ```
@@ -93,9 +93,9 @@ pub fn parse_line<T: White>() -> stream::Result<T> {
 /// let number: i32 = parse_string(" 123  ").unwrap();
 /// assert!(number == 123);
 /// ```
-pub fn parse_string<T: White>(s: &str) -> stream::Result<T> {
+pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
     let mut stream = stream::SplitAsciiWhitespace::new(s);
-    let value = White::read(&mut stream)?;
+    let value = FromStream::read(&mut stream)?;
 
     if let Ok(Some(_)) = stream::StrStream::next(&mut stream) {
         Err(stream::Error::Leftovers)
@@ -104,13 +104,13 @@ pub fn parse_string<T: White>(s: &str) -> stream::Result<T> {
     }
 }
 
-/// Parses a whole file as a `White` value
+/// Parses a whole file as a `FromStream` value
 ///
 /// Calling this function is equivalent to:
 ///
 /// ```no_run
-/// # use whiteread::{Reader, ReaderResult, White};
-/// # fn foo<T: White>() -> ReaderResult<T> {
+/// # use whiteread::{Reader, ReaderResult, FromStream};
+/// # fn foo<T: FromStream>() -> ReaderResult<T> {
 /// # let path = "foo";
 /// # Ok(
 /// Reader::open(path)?.finish()?
@@ -129,6 +129,6 @@ pub fn parse_string<T: White>(s: &str) -> stream::Result<T> {
 /// # use whiteread::parse_file;
 /// let x: (i32, i32) = parse_file("coords.txt").unwrap();
 /// ```
-pub fn parse_file<T: White, P: AsRef<Path>>(path: P) -> ReaderResult<T> {
+pub fn parse_file<T: FromStream, P: AsRef<Path>>(path: P) -> ReaderResult<T> {
     Ok(Reader::open(path)?.finish()?)
 }
