@@ -504,6 +504,7 @@ fn display(
 ) -> fmt::Result {
     write!(f, "{}", error)?;
     if row != 0 {
+        #[allow(deprecated)] // Rust 1.15 doesn't have trim_end_matches yet
         let line = line.trim_right_matches(&['\n', '\r'][..]);
 
         if line.len() <= 120 {

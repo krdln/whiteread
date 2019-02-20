@@ -136,6 +136,7 @@ impl ::std::error::Error for Error {
     }
 
     fn cause(&self) -> Option<&::std::error::Error> {
+        #[allow(deprecated)] // Rust 1.15 doesn't have Error::source yet
         match *self {
             IoError(ref e) => e.cause(),
             _ => None,
