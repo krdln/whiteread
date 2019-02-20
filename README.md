@@ -1,3 +1,7 @@
+# whiteread
+
+[![Build Status](https://travis-ci.com/krdln/whiteread.svg?branch=master)](https://travis-ci.com/krdln/whiteread)
+
 Yet another crate for easily reading values from strings or input.
 
 It was made to mimic `cin >>` functionality
@@ -9,7 +13,7 @@ and to be usable for parsing text input in format used in algorithmic contests.
 
 ### [Changelog](CHANGELOG.md)
 
-# Features:
+## Features:
 
 * Function-based interface (as opposed to macro-based one).
 * Simple: only whitespace can separate values, hence name.
@@ -23,7 +27,7 @@ and to be usable for parsing text input in format used in algorithmic contests.
   This crate uses modules, but you can use `cargo run` to generate
   a concatenated single-file template (see below).
 
-# Examples
+## Examples
 
 Reading an integer from stdin:
 
@@ -62,7 +66,7 @@ Reading a file (can also use `Reader` for more control):
 let number: i32 = parse_file("number.txt").unwrap();
 ```
 
-# Installation
+## Installation
 
 `cargo add whiteread` or add this to your `Cargo.toml`:
 
@@ -73,7 +77,7 @@ whiteread = "0.4.4"
 
 Minimal supported Rust version is 1.15.
 
-## Using in non-Cargo environment
+### Using in non-Cargo environment
 
 If you want to use this crate where cargo is unavailable,
 *whiteread* can be squished into single file. Here's how
