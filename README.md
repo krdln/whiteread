@@ -71,6 +71,8 @@ let number: i32 = parse_file("number.txt").unwrap();
 whiteread = "0.4.4"
 ```
 
+Minimal supported Rust version is 1.15.
+
 ## Using in non-Cargo environment
 
 If you want to use this crate where cargo is unavailable,
