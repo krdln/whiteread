@@ -122,9 +122,7 @@ impl Error {
 }
 
 impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Error {
-        IoError(e)
-    }
+    fn from(e: io::Error) -> Error { IoError(e) }
 }
 
 impl ::std::error::Error for Error {
@@ -147,7 +145,7 @@ impl ::std::error::Error for Error {
 
 impl ::std::fmt::Display for Error {
     fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        use ::std::error::Error;
+        use std::error::Error;
         match *self {
             IoError(ref e) => e.fmt(fmt),
             _ => fmt.write_str(self.description()),
@@ -165,13 +163,15 @@ impl From<Error> for io::Error {
 }
 // not using T: FromStr here because of coherence and tuples
 macro_rules! white {
-    ($T:ident) => (
+    ($T:ident) => {
         impl White for $T {
             fn read<I: StrStream>(it: &mut I) -> Result<$T> {
-                try!( it.next() ).ok_or(TooShort).and_then( |s| s.parse().or(Err(ParseError)) )
+                try!(it.next())
+                    .ok_or(TooShort)
+                    .and_then(|s| s.parse().or(Err(ParseError)))
             }
         }
-    )
+    };
 }
 
 white!(bool);
@@ -288,7 +288,7 @@ pub struct SkipAll;
 
 impl White for SkipAll {
     fn read<I: StrStream>(it: &mut I) -> Result<SkipAll> {
-        while let Some(_) = it.next()? {};
+        while let Some(_) = it.next()? {}
         Ok(SkipAll)
     }
 }
@@ -358,4 +358,3 @@ impl<T: White + Default + PartialEq> White for Zeroed<T> {
         }
     }
 }
-

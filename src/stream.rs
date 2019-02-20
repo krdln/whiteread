@@ -1,7 +1,7 @@
 //! This module defines the `StrStream` trait.
 
-use std::str::SplitWhitespace;
 use std::io;
+use std::str::SplitWhitespace;
 
 /// A streaming iterator yielding borrowed strings.
 pub trait StrStream {
@@ -9,9 +9,7 @@ pub trait StrStream {
 }
 
 impl<'a> StrStream for SplitWhitespace<'a> {
-    fn next(&mut self) -> io::Result<Option<&str>> {
-        Ok(Iterator::next(self))
-    }
+    fn next(&mut self) -> io::Result<Option<&str>> { Ok(Iterator::next(self)) }
 }
 
 /// Fast version of std::str::SplitWhitespace, but with some drawbacks.
@@ -31,7 +29,10 @@ impl<'a> SplitAsciiWhitespace<'a> {
     pub fn position(&self) -> usize { self.position }
 
     pub fn from_parts(s: &'a str, position: usize) -> Self {
-        SplitAsciiWhitespace { s: s, position: position }
+        SplitAsciiWhitespace {
+            s: s,
+            position: position,
+        }
     }
 }
 
@@ -64,9 +65,7 @@ impl<'a> Iterator for SplitAsciiWhitespace<'a> {
 }
 
 impl<'a> StrStream for SplitAsciiWhitespace<'a> {
-    fn next(&mut self) -> io::Result<Option<&str>> {
-        Ok(Iterator::next(self))
-    }
+    fn next(&mut self) -> io::Result<Option<&str>> { Ok(Iterator::next(self)) }
 }
 
 /// Extends a `str` with `split_ascii_whitespace` method.
@@ -75,8 +74,5 @@ pub trait StrExt {
 }
 
 impl StrExt for str {
-    fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace {
-        SplitAsciiWhitespace::new(self)
-    }
+    fn split_ascii_whitespace(&self) -> SplitAsciiWhitespace { SplitAsciiWhitespace::new(self) }
 }
-

@@ -40,19 +40,19 @@
 //! (stop on end of input, but propagate all the other errors),
 //! use [`none_on_too_short`](reader/trait.BorrowedResultExt.html#tymethod.none_on_too_short)
 
-use std::path::Path;
 use std::io;
+use std::path::Path;
 
 pub mod stream;
 
 pub mod white;
-pub use self::white::{White, Skip, SkipAll, Lengthed, Zeroed};
-pub use self::white::{TooShort, ParseError, Leftovers};
+pub use self::white::{Leftovers, ParseError, TooShort};
+pub use self::white::{Lengthed, Skip, SkipAll, White, Zeroed};
 
 pub mod reader;
-pub use self::reader::Reader;
 pub use self::reader::OwnedError as ReaderError;
 pub use self::reader::OwnedResult as ReaderResult;
+pub use self::reader::Reader;
 
 /// Reexports of traits containing the extension methods.
 ///
@@ -131,6 +131,5 @@ pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
 /// let x: (i32, i32) = parse_file("coords.txt").unwrap();
 /// ```
 pub fn parse_file<T: White, P: AsRef<Path>>(path: P) -> ReaderResult<T> {
-    Ok( Reader::open(path)?.finish()? )
+    Ok(Reader::open(path)?.finish()?)
 }
-

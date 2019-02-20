@@ -2,18 +2,18 @@
 //!
 //! See the [`Reader`](struct.Reader.html) for docs.
 
-use std::io;
-use std::fmt;
-use std::path::Path;
-use std::fs;
 use std::error::Error as StdError;
+use std::fmt;
+use std::fs;
+use std::io;
+use std::path::Path;
 
 use super::white;
 use super::white::Error::*;
 use super::White;
 
-use super::stream::StrStream;
 use super::stream::SplitAsciiWhitespace;
+use super::stream::StrStream;
 
 /// Wrapper for BufRead allowing easy parsing values from a Reader.
 ///
@@ -90,9 +90,7 @@ pub struct Reader<B: io::BufRead> {
     col: usize,
 }
 
-unsafe fn erase_lifetime<'a, 'b, T: 'a + 'b>(x: &'a mut T) -> &'b mut T {
-    &mut *(x as *mut _)
-}
+unsafe fn erase_lifetime<'a, 'b, T: 'a + 'b>(x: &'a mut T) -> &'b mut T { &mut *(x as *mut _) }
 
 /// # Constructors
 impl<B: io::BufRead> Reader<B> {
@@ -148,16 +146,12 @@ impl<B: io::BufRead> Reader<B> {
     ///
     /// Using `continue_` over `parse` is preferred, as it conveys better
     /// which part of input will be parsed.
-    pub fn parse<T: White>(&mut self) -> BorrowedResult<T> {
-        White::read(self).add_lineinfo(self)
-    }
+    pub fn parse<T: White>(&mut self) -> BorrowedResult<T> { White::read(self).add_lineinfo(self) }
 
     /// Just .continue_().unwrap().
     ///
     /// Use it if you really value your time. ;)
-    pub fn p<T: White>(&mut self) -> T {
-        self.parse().unwrap()
-    }
+    pub fn p<T: White>(&mut self) -> T { self.parse().unwrap() }
 
     /// Parses remaining part of reader into White value
     /// in a line-agnostic way.
@@ -267,7 +261,6 @@ impl<B: io::BufRead> Reader<B> {
             Ok(value)
         }
     }
-
 }
 
 /// # Additional methods
@@ -286,9 +279,7 @@ impl<B: io::BufRead> Reader<B> {
     }
 
     /// Gets underlying buffer back.
-    pub fn into_inner(self) -> B {
-        self.buf
-    }
+    pub fn into_inner(self) -> B { self.buf }
 }
 
 impl<B: io::BufRead> StrStream for Reader<B> {
@@ -423,7 +414,11 @@ impl<'a> BorrowedError<'a> {
     /// `None` is returned when the location info is not available,
     /// eg. when IO error happens.
     pub fn location(&self) -> Option<(u64, usize)> {
-        if self.row > 0 { Some((self.row, self.col)) } else { None }
+        if self.row > 0 {
+            Some((self.row, self.col))
+        } else {
+            None
+        }
     }
 }
 
@@ -452,7 +447,11 @@ impl OwnedError {
     /// `None` is returned when the location info is not available,
     /// eg. when IO error happens.
     pub fn location(&self) -> Option<(u64, usize)> {
-        if self.row > 0 { Some((self.row, self.col)) } else { None }
+        if self.row > 0 {
+            Some((self.row, self.col))
+        } else {
+            None
+        }
     }
 }
 
@@ -470,32 +469,29 @@ impl AsRef<white::Error> for OwnedError {
 }
 
 impl From<io::Error> for OwnedError {
-    fn from(e: io::Error) -> OwnedError {
-        BorrowedError::from(e).to_owned()
-    }
+    fn from(e: io::Error) -> OwnedError { BorrowedError::from(e).to_owned() }
 }
 
 impl<'a> From<BorrowedError<'a>> for OwnedError {
-    fn from(e: BorrowedError<'a>) -> OwnedError {
-        e.to_owned()
-    }
+    fn from(e: BorrowedError<'a>) -> OwnedError { e.to_owned() }
 }
 
 impl<'a> From<BorrowedError<'a>> for Box<StdError> {
-    fn from(e: BorrowedError<'a>) -> Box<StdError> {
-        Box::from(e.to_owned())
-    }
+    fn from(e: BorrowedError<'a>) -> Box<StdError> { Box::from(e.to_owned()) }
 }
 
 impl<'a> From<BorrowedError<'a>> for Box<StdError + Send + Sync> {
-    fn from(e: BorrowedError<'a>) -> Self {
-        Box::from(e.to_owned())
-    }
+    fn from(e: BorrowedError<'a>) -> Self { Box::from(e.to_owned()) }
 }
 
 impl<'a> From<io::Error> for BorrowedError<'a> {
     fn from(e: io::Error) -> BorrowedError<'a> {
-        BorrowedError { error: white::IoError(e), row: 0, col: 0, line: "" }
+        BorrowedError {
+            error: white::IoError(e),
+            row: 0,
+            col: 0,
+            line: "",
+        }
     }
 }
 
@@ -504,7 +500,7 @@ fn display(
     line: &str,
     row: u64,
     mut col: usize,
-    f: &mut fmt::Formatter
+    f: &mut fmt::Formatter,
 ) -> fmt::Result {
     write!(f, "{}", error)?;
     if row != 0 {
@@ -522,7 +518,7 @@ fn display(
             let number = row.to_string();
             write!(f, "{}| ", number)?;
             writeln!(f, "{}", line)?;
-            for _ in 0 .. number.len() + 2 {
+            for _ in 0..number.len() + 2 {
                 write!(f, " ")?;
             }
             for c in line[..col].chars() {
@@ -622,18 +618,20 @@ impl<'a, T> BorrowedResultExt<'a, T> for BorrowedResult<'a, T> {
     fn none_on_too_short(self) -> BorrowedResult<'a, Option<T>> {
         match self {
             Ok(x) => Ok(Some(x)),
-            Err(BorrowedError { error: TooShort, .. } ) => Ok(None),
+            Err(BorrowedError {
+                error: TooShort, ..
+            }) => Ok(None),
             Err(e) => Err(e),
         }
     }
 
-    fn to_owned(self) -> OwnedResult<T> {
-        self.map_err(BorrowedError::to_owned)
-    }
+    fn to_owned(self) -> OwnedResult<T> { self.map_err(BorrowedError::to_owned) }
 }
 
 impl<T, E> PrettyUnwrap for Result<T, E>
-where E: fmt::Display {
+where
+    E: fmt::Display,
+{
     type Target = T;
 
     fn pretty_unwrap(self) -> T {
@@ -649,7 +647,9 @@ where E: fmt::Display {
 }
 
 fn add_lineinfo<'line, B>(error: white::Error, reader: &'line Reader<B>) -> BorrowedError<'line>
-where B: io::BufRead {
+where
+    B: io::BufRead,
+{
     BorrowedError {
         error: error,
         row: reader.row,
@@ -660,13 +660,15 @@ where B: io::BufRead {
 
 trait AddLineinfoExt<T> {
     fn add_lineinfo<'line, B>(self, reader: &'line Reader<B>) -> BorrowedResult<'line, T>
-    where B: io::BufRead;
+    where
+        B: io::BufRead;
 }
 
 impl<T> AddLineinfoExt<T> for white::Result<T> {
     fn add_lineinfo<'a, B>(self, reader: &'a Reader<B>) -> BorrowedResult<'a, T>
-    where B: io::BufRead {
+    where
+        B: io::BufRead,
+    {
         self.map_err(|e| add_lineinfo(e, reader))
     }
 }
-

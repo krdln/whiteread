@@ -7,7 +7,9 @@ fn main() {
 }
 
 fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) -> io::Result<()> {
-    for _ in 0..ident { write!(w, "    ")? }
+    for _ in 0..ident {
+        write!(w, "    ")?
+    }
     writeln!(w, "{}mod {} {{", publicity, name)?;
 
     let source = match name {
@@ -32,33 +34,46 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
             continue;
         }
 
-        if (trimmed.starts_with("mod") || trimmed.starts_with("pub mod"))
-        && trimmed.ends_with(";") {
+        if (trimmed.starts_with("mod") || trimmed.starts_with("pub mod")) && trimmed.ends_with(";")
+        {
             let name = trimmed
-                .split("mod").nth(1).unwrap()
-                .split(";").nth(0).unwrap()
+                .split("mod")
+                .nth(1)
+                .unwrap()
+                .split(";")
+                .nth(0)
+                .unwrap()
                 .trim();
             let publicity = trimmed.split("mod").nth(0).unwrap();
             write_module(w, ident + 1, publicity, name)?;
         } else {
-            for _ in 0 .. ident+1 { write!(w, "    ")? }
+            for _ in 0..ident + 1 {
+                write!(w, "    ")?
+            }
             writeln!(w, "{}", line)?;
         }
     }
 
-    for _ in 0..ident { write!(w, "    ")? }
+    for _ in 0..ident {
+        write!(w, "    ")?
+    }
     writeln!(w, "}}")?;
 
     Ok(())
 }
 
 fn ident_len(line: &str) -> usize {
-    if line.trim() == "" { return usize::max_value() }
+    if line.trim() == "" {
+        return usize::max_value();
+    }
     line.chars().take_while(|c| c.is_whitespace()).count()
 }
 
 fn write_template<W: Write>(mut w: W) -> io::Result<()> {
-    write!(w, "{}", &r"
+    write!(
+        w,
+        "{}",
+        &r"
 use whiteread as w;
 use w::prelude::*;
 
@@ -78,7 +93,8 @@ fn main() {
 
 // From https://github.com/krdln/whiteread on MIT license
 #[allow(dead_code)]
-"[1..])?;
+"[1..]
+    )?;
 
     write_module(&mut w, 0, "", "whiteread")?;
 
