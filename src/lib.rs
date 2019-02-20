@@ -1,6 +1,6 @@
 //! Crate for reading whitespace-separated values.
 //!
-//! The crate defines a trait [`White`](white/trait.White.html), which
+//! The crate defines a trait [`White`](stream/trait.White.html), which
 //! describes types that can be parsed from whitespace-separated words,
 //! which includes eg. integers, tuples and vectors.
 //!
@@ -44,9 +44,9 @@ use std::io;
 use std::path::Path;
 
 pub mod stream;
+pub use self::stream::White;
 
-pub mod white;
-pub use self::white::White;
+pub mod adapters;
 
 pub mod reader;
 pub use self::reader::OwnedError as ReaderError;
@@ -79,7 +79,7 @@ pub mod prelude {
 /// # use whiteread::parse_line;
 /// let x: i32 = parse_line().unwrap();
 /// ```
-pub fn parse_line<T: White>() -> white::Result<T> {
+pub fn parse_line<T: White>() -> stream::Result<T> {
     let mut line = String::new();
     io::stdin().read_line(&mut line)?;
     parse_string(&line)
@@ -93,12 +93,12 @@ pub fn parse_line<T: White>() -> white::Result<T> {
 /// let number: i32 = parse_string(" 123  ").unwrap();
 /// assert!(number == 123);
 /// ```
-pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
+pub fn parse_string<T: White>(s: &str) -> stream::Result<T> {
     let mut stream = stream::SplitAsciiWhitespace::new(s);
     let value = White::read(&mut stream)?;
 
     if let Ok(Some(_)) = stream::StrStream::next(&mut stream) {
-        Err(white::Error::Leftovers)
+        Err(stream::Error::Leftovers)
     } else {
         Ok(value)
     }

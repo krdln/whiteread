@@ -8,8 +8,8 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use super::white;
-use super::white::Error::*;
+use super::stream;
+use super::stream::Error::*;
 use super::White;
 
 use super::stream::SplitAsciiWhitespace;
@@ -52,7 +52,7 @@ use super::stream::StrStream;
 ///
 /// ```
 /// # use whiteread::Reader;
-/// # use whiteread::white::Error::TooShort;
+/// # use whiteread::stream::Error::TooShort;
 /// # use whiteread::prelude::*;
 /// let data = std::io::Cursor::new(
 /// br"1 2
@@ -167,7 +167,7 @@ impl<B: io::BufRead> Reader<B> {
         // safe -- WA for borrowck bug, should be fixed by NLL
         let value = unsafe { erase_lifetime(self) }.parse()?;
         if let Ok(Some(_)) = StrStream::next(self) {
-            Err(white::Error::Leftovers).add_lineinfo(self)
+            Err(stream::Error::Leftovers).add_lineinfo(self)
         } else {
             Ok(value)
         }
@@ -363,7 +363,7 @@ impl<B: io::BufRead> StrStream for Reader<B> {
 /// ```
 #[derive(Debug)]
 pub struct BorrowedError<'line> {
-    error: white::Error,
+    error: stream::Error,
     line: &'line str,
     row: u64,
     col: usize,
@@ -381,7 +381,7 @@ pub struct BorrowedError<'line> {
 /// See the [`BorrowedError`](struct.BorrowedError.html) for more docs.
 #[derive(Debug)]
 pub struct OwnedError {
-    error: white::Error,
+    error: stream::Error,
     line: Box<str>,
     row: u64,
     col: usize,
@@ -403,7 +403,7 @@ impl<'a> BorrowedError<'a> {
     /// Obtains an underlying error, by stripping the location info.
     ///
     /// You can also use `.as_ref()` to get a reference to it.
-    pub fn into_inner(self) -> white::Error { self.error }
+    pub fn into_inner(self) -> stream::Error { self.error }
 
     /// Obtains a location (line, column) of the error.
     ///
@@ -436,7 +436,7 @@ impl OwnedError {
     /// Obtains an underlying error, by stripping the location info.
     ///
     /// You can also use `.as_ref()` to get a reference to it.
-    pub fn into_inner(self) -> white::Error { self.error }
+    pub fn into_inner(self) -> stream::Error { self.error }
 
     /// Obtains a location (line, column) of the error.
     ///
@@ -461,12 +461,12 @@ impl StdError for OwnedError {
     fn cause(&self) -> Option<&StdError> { Some(&self.error) }
 }
 
-impl<'a> AsRef<white::Error> for BorrowedError<'a> {
-    fn as_ref(&self) -> &white::Error { &self.error }
+impl<'a> AsRef<stream::Error> for BorrowedError<'a> {
+    fn as_ref(&self) -> &stream::Error { &self.error }
 }
 
-impl AsRef<white::Error> for OwnedError {
-    fn as_ref(&self) -> &white::Error { &self.error }
+impl AsRef<stream::Error> for OwnedError {
+    fn as_ref(&self) -> &stream::Error { &self.error }
 }
 
 impl From<io::Error> for OwnedError {
@@ -488,7 +488,7 @@ impl<'a> From<BorrowedError<'a>> for Box<StdError + Send + Sync> {
 impl<'a> From<io::Error> for BorrowedError<'a> {
     fn from(e: io::Error) -> BorrowedError<'a> {
         BorrowedError {
-            error: white::Error::IoError(e),
+            error: stream::Error::IoError(e),
             row: 0,
             col: 0,
             line: "",
@@ -497,7 +497,7 @@ impl<'a> From<io::Error> for BorrowedError<'a> {
 }
 
 fn display(
-    error: &white::Error,
+    error: &stream::Error,
     line: &str,
     row: u64,
     mut col: usize,
@@ -648,7 +648,7 @@ where
     }
 }
 
-fn add_lineinfo<'line, B>(error: white::Error, reader: &'line Reader<B>) -> BorrowedError<'line>
+fn add_lineinfo<'line, B>(error: stream::Error, reader: &'line Reader<B>) -> BorrowedError<'line>
 where
     B: io::BufRead,
 {
@@ -666,7 +666,7 @@ trait AddLineinfoExt<T> {
         B: io::BufRead;
 }
 
-impl<T> AddLineinfoExt<T> for white::Result<T> {
+impl<T> AddLineinfoExt<T> for stream::Result<T> {
     fn add_lineinfo<'a, B>(self, reader: &'a Reader<B>) -> BorrowedResult<'a, T>
     where
         B: io::BufRead,

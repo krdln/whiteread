@@ -1,6 +1,6 @@
 extern crate whiteread;
 use whiteread::{parse_string, Reader, White};
-use whiteread::white::Lengthed;
+use whiteread::adapters::Lengthed;
 
 fn main() {
     // parse_string function

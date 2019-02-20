@@ -15,7 +15,7 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
     let source = match name {
         "whiteread" => include_str!("lib.rs"),
         "stream" => include_str!("stream.rs"),
-        "white" => include_str!("white.rs"),
+        "adapters" => include_str!("adapters.rs"),
         "reader" => include_str!("reader.rs"),
         x => panic!("whiteread-template: unknown module {}", x),
     };
