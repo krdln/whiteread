@@ -1,6 +1,6 @@
 extern crate whiteread;
-use whiteread::Reader;
 use whiteread::adapters::Lengthed;
+use whiteread::Reader;
 
 fn main() {
     let i = std::io::stdin();

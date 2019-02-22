@@ -7,7 +7,7 @@
 //!
 //! [`FromStream`]: ../stream/trait.FromStream.html
 
-use super::stream::{StrStream, FromStream, Result};
+use super::stream::{FromStream, Result, StrStream};
 
 /// Used to consume and ignore one whitespace-separated value
 ///

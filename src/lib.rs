@@ -49,21 +49,7 @@ pub use self::stream::FromStream;
 pub mod adapters;
 
 pub mod reader;
-pub use self::reader::OwnedError as ReaderError;
-pub use self::reader::OwnedResult as ReaderResult;
 pub use self::reader::Reader;
-
-/// Reexports of traits containing the extension methods.
-///
-/// The prelude is usually glob-imported:
-///
-/// ```
-/// use whiteread::prelude::*;
-/// ```
-pub mod prelude {
-    pub use super::reader::BorrowedResultExt;
-    pub use super::reader::PrettyUnwrap;
-}
 
 // Helpers -----------------------------------------------------------------------------------------
 
@@ -109,8 +95,8 @@ pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
 /// Calling this function is equivalent to:
 ///
 /// ```no_run
-/// # use whiteread::{Reader, ReaderResult, FromStream};
-/// # fn foo<T: FromStream>() -> ReaderResult<T> {
+/// # use whiteread::{Reader, reader, FromStream};
+/// # fn foo<T: FromStream>() -> reader::Result<T> {
 /// # let path = "foo";
 /// # Ok(
 /// Reader::open(path)?.finish()?
@@ -129,6 +115,6 @@ pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
 /// # use whiteread::parse_file;
 /// let x: (i32, i32) = parse_file("coords.txt").unwrap();
 /// ```
-pub fn parse_file<T: FromStream, P: AsRef<Path>>(path: P) -> ReaderResult<T> {
+pub fn parse_file<T: FromStream, P: AsRef<Path>>(path: P) -> reader::Result<T> {
     Ok(Reader::open(path)?.finish()?)
 }

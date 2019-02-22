@@ -53,7 +53,6 @@ use super::stream::StrStream;
 /// ```
 /// # use whiteread::Reader;
 /// # use whiteread::stream::Error::TooShort;
-/// # use whiteread::prelude::*;
 /// let data = std::io::Cursor::new(
 /// br"1 2
 ///
@@ -139,7 +138,7 @@ impl Reader<io::BufReader<fs::File>> {
 /// If they return other variants too, it is stated explicitely.
 impl<B: io::BufRead> Reader<B> {
     /// Parses a FromStream value without specialy treating newlines (just like `scanf` or `cin>>`)
-    pub fn continue_<T: FromStream>(&mut self) -> BorrowedResult<T> {
+    pub fn continue_<T: FromStream>(&mut self) -> Result<T> {
         FromStream::read(self).add_lineinfo(self)
     }
 
@@ -147,7 +146,9 @@ impl<B: io::BufRead> Reader<B> {
     ///
     /// Using `continue_` over `parse` is preferred, as it conveys better
     /// which part of input will be parsed.
-    pub fn parse<T: FromStream>(&mut self) -> BorrowedResult<T> { FromStream::read(self).add_lineinfo(self) }
+    pub fn parse<T: FromStream>(&mut self) -> Result<T> {
+        FromStream::read(self).add_lineinfo(self)
+    }
 
     /// Just .continue_().unwrap().
     ///
@@ -163,9 +164,8 @@ impl<B: io::BufRead> Reader<B> {
     ///
     /// Additionaly to usual parse errors, this method may also return
     /// [`Leftovers`](../white/enum.Error.html#variant.Leftovers).
-    pub fn finish<T: FromStream>(&mut self) -> BorrowedResult<T> {
-        // safe -- WA for borrowck bug, should be fixed by NLL
-        let value = unsafe { erase_lifetime(self) }.parse()?;
+    pub fn finish<T: FromStream>(&mut self) -> Result<T> {
+        let value = self.parse()?;
         if let Ok(Some(_)) = StrStream::next(self) {
             Err(stream::Error::Leftovers).add_lineinfo(self)
         } else {
@@ -219,7 +219,7 @@ impl<B: io::BufRead> Reader<B> {
     /// ### Errors
     ///
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
-    pub fn line<T: FromStream>(&mut self) -> BorrowedResult<T> {
+    pub fn line<T: FromStream>(&mut self) -> Result<T> {
         if let None = self.read_line()? {
             return Err(TooShort).add_lineinfo(self);
         };
@@ -227,7 +227,7 @@ impl<B: io::BufRead> Reader<B> {
     }
 
     /// Reads a new line from input and parses some part of it into FromStream value.
-    pub fn start_line<T: FromStream>(&mut self) -> BorrowedResult<T> {
+    pub fn start_line<T: FromStream>(&mut self) -> Result<T> {
         if let None = self.read_line()? {
             return Err(TooShort).add_lineinfo(self);
         };
@@ -235,7 +235,7 @@ impl<B: io::BufRead> Reader<B> {
     }
 
     /// Parses some part of current line into FromStream value.
-    pub fn continue_line<T: FromStream>(&mut self) -> BorrowedResult<T> {
+    pub fn continue_line<T: FromStream>(&mut self) -> Result<T> {
         let result = {
             let mut splitter = SplitAsciiWhitespace::from_parts(&self.line, self.col);
             let result = FromStream::read(&mut splitter);
@@ -253,7 +253,7 @@ impl<B: io::BufRead> Reader<B> {
     ///
     /// Additionaly to usual parse errors, this method may also return
     /// [`Leftovers`](../white/enum.Error.html#variant.Leftovers).
-    pub fn finish_line<T: FromStream>(&mut self) -> BorrowedResult<T> {
+    pub fn finish_line<T: FromStream>(&mut self) -> Result<T> {
         // safe -- WA for borrowck bug, should be fixed by NLL
         let value = unsafe { erase_lifetime(self) }.continue_line()?;
         if let Some(_) = self.next_within_line() {
@@ -272,7 +272,7 @@ impl<B: io::BufRead> Reader<B> {
     /// are insufficient or just to get a preview of a line.
     /// Note that line's content will not be considered consumed
     /// and will be available for `continue_` and `continue_line`.
-    pub fn next_line(&mut self) -> BorrowedResult<&str> {
+    pub fn next_line(&mut self) -> Result<&str> {
         if let None = self.read_line()? {
             return Err(TooShort).add_lineinfo(self);
         }
@@ -301,105 +301,33 @@ impl<B: io::BufRead> StrStream for Reader<B> {
 
 /// An error type containing a lineinfo.
 ///
-/// This error is returned from a [`Reader`](struct.Reader.html) methods,
-/// and it contains an information about location of the error (line and column).
+/// This error is returned from a [`Reader`](struct.Reader.html)'s methods,
+/// and it contains information about location of the error (line and column).
 ///
-/// You can display the lineinfo using the `Display` trait,
-/// or call the [`pretty_unwrap`](trait.PrettyUnwrap.html#tymethod.pretty_unwrap).
-///
-/// The displayed error provides a line number and a column marker:
+/// The error message provides a line number and a column marker rendered underneath
+/// the actual line:
 ///
 /// ```text
 /// excessive input provided at
-/// 1| 42 aaa
-///         ^
+/// 1 | 42 aaa
+///          ^
 /// ```
 ///
-/// Note that when using `unwrap` the `Debug` trait will be used,
-/// and the location won't be pretty-printed.
+/// The lineinfo will be displayed when using `Display` (like in `println!("{}", e)`)
+/// or `Debug` formatting (like in `unwrap`), although `Display` is preferred.
 ///
-/// The *borrowed* in the name refers to the fact that it borrows the
-/// reader that returned an error
-/// (so it can display error location, while still being cheap to create).
-/// The owned variant is called [`OwnedError`](struct.OwnedError.html).
-///
-/// Because of this borrowing, this error should be either handled
-/// immediately or converted to `OwnedError` or `Box<Error>`
-/// (the `try!` macro and `?` operator automatically perform such conversion).
-///
-/// Note: this type doesn't implement `std::error::Error`,
-/// so that custom conversion into `Box<Error>` can be provided
-/// (which first creates `OwnedError`).
-///
-/// # Examples
-///
-/// Explicit handling:
-///
-/// ```no_run
-/// # use whiteread::Reader;
-/// let mut reader = Reader::new(std::io::Cursor::new(b"123 aaa"));
-/// match reader.continue_::<i32>() {
-///     Ok(x) => println!("I've read {}", x),
-///     Err(e) => println!("Something went wrong: {}", e),
-/// }
-/// ```
-///
-/// Implicit conversion to `Box<Error>` or `OwnedError`:
-///
-/// ```no_run
-/// use std::error::Error;
-/// use std::io::BufRead;
-/// use whiteread::reader::{Reader, OwnedError};
-///
-/// fn read_numbers<B: BufRead>(reader: &mut Reader<B>) -> Result<Vec<i32>, Box<Error>> {
-///     let numbers = reader.continue_()?;
-///     Ok(numbers)
-/// }
-///
-/// fn read_numbers_<B: BufRead>(reader: &mut Reader<B>) -> Result<Vec<i32>, OwnedError> {
-///     let numbers = reader.continue_()?;
-///     Ok(numbers)
-/// }
-/// ```
-#[derive(Debug)]
-pub struct BorrowedError<'line> {
+pub struct Error {
     error: stream::Error,
-    line: &'line str,
+    /// 1-indexed row or 0 in case of an IO error
+    // TODO: Use Option<NonZero> when dropping support for Rust 1.15
     row: u64,
+    /// 1-indexed column
     col: usize,
+    /// Rendered error message
+    rendered: Option<Box<str>>,
 }
 
-/// An owned version of the error with lineinfo.
-///
-/// It can be created from the [`BorrowedError`](struct.BorrowedError.html)
-/// using `.to_owned()` method `From::from` or automatically with `try!` or `?`.
-///
-/// This type, in contrary to `BorrowedError`, can be used as a return value
-/// (ie. [`OwnedResult`](type.OwnedResult.html)). Because of that, it's also
-/// exported as `ReaderError` in the crate's root.
-///
-/// See the [`BorrowedError`](struct.BorrowedError.html) for more docs.
-#[derive(Debug)]
-pub struct OwnedError {
-    error: stream::Error,
-    line: Box<str>,
-    row: u64,
-    col: usize,
-}
-
-impl<'a> BorrowedError<'a> {
-    /// Obtains an owned (`'static`) version of the error
-    ///
-    /// The conversion is also automatically performed by `?`
-    pub fn to_owned(self) -> OwnedError {
-        OwnedError {
-            error: self.error,
-            line: self.line.to_owned().into_boxed_str(),
-            row: self.row,
-            col: self.col,
-        }
-    }
-
+impl Error {
     /// Obtains an underlying error, by stripping the location info.
     ///
     /// You can also use `.as_ref()` to get a reference to it.
@@ -428,82 +356,37 @@ fn test_location() {
     let mut reader = Reader::new(io::Cursor::new(b"\n\n\n\n a 2"));
     let error = reader.continue_::<u8>().unwrap_err();
     assert_eq!(error.location(), Some((5, 2)));
-    let error = error.to_owned();
-    assert_eq!(error.location(), Some((5, 2)));
 }
 
-impl OwnedError {
-    /// Obtains an underlying error, by stripping the location info.
-    ///
-    /// You can also use `.as_ref()` to get a reference to it.
-    pub fn into_inner(self) -> stream::Error { self.error }
-
-    /// Obtains a location (line, column) of the error.
-    ///
-    /// ### Return value
-    ///
-    /// The tuple contains a 1-indexed number of line
-    /// and a 1-indexed number of column.
-    ///
-    /// `None` is returned when the location info is not available,
-    /// eg. when IO error happens.
-    pub fn location(&self) -> Option<(u64, usize)> {
-        if self.row > 0 {
-            Some((self.row, self.col))
-        } else {
-            None
-        }
-    }
-}
-
-impl StdError for OwnedError {
+impl StdError for Error {
     fn description(&self) -> &str { self.error.description() }
     fn cause(&self) -> Option<&StdError> { Some(&self.error) }
 }
 
-impl<'a> AsRef<stream::Error> for BorrowedError<'a> {
+impl AsRef<stream::Error> for Error {
     fn as_ref(&self) -> &stream::Error { &self.error }
 }
 
-impl AsRef<stream::Error> for OwnedError {
-    fn as_ref(&self) -> &stream::Error { &self.error }
-}
-
-impl From<io::Error> for OwnedError {
-    fn from(e: io::Error) -> OwnedError { BorrowedError::from(e).to_owned() }
-}
-
-impl<'a> From<BorrowedError<'a>> for OwnedError {
-    fn from(e: BorrowedError<'a>) -> OwnedError { e.to_owned() }
-}
-
-impl<'a> From<BorrowedError<'a>> for Box<StdError> {
-    fn from(e: BorrowedError<'a>) -> Box<StdError> { Box::from(e.to_owned()) }
-}
-
-impl<'a> From<BorrowedError<'a>> for Box<StdError + Send + Sync> {
-    fn from(e: BorrowedError<'a>) -> Self { Box::from(e.to_owned()) }
-}
-
-impl<'a> From<io::Error> for BorrowedError<'a> {
-    fn from(e: io::Error) -> BorrowedError<'a> {
-        BorrowedError {
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Error {
+        Error {
             error: stream::Error::IoError(e),
             row: 0,
             col: 0,
-            line: "",
+            rendered: None,
         }
     }
 }
 
-fn display(
+fn render_error_to_formatter<F: fmt::Write>(
     error: &stream::Error,
     line: &str,
     row: u64,
     mut col: usize,
-    f: &mut fmt::Formatter,
+    f: &mut F,
 ) -> fmt::Result {
     write!(f, "{}", error)?;
+
     if row != 0 {
         #[allow(deprecated)] // Rust 1.15 doesn't have trim_end_matches yet
         let line = line.trim_right_matches(&['\n', '\r'][..]);
@@ -518,9 +401,9 @@ fn display(
 
             writeln!(f, " at")?;
             let number = row.to_string();
-            write!(f, "{}| ", number)?;
+            write!(f, "{} | ", number)?;
             writeln!(f, "{}", line)?;
-            for _ in 0..number.len() + 2 {
+            for _ in 0..number.len() + 3 {
                 write!(f, " ")?;
             }
             for c in line[..col].chars() {
@@ -535,142 +418,115 @@ fn display(
             write!(f, " at line {}, column {}", row, col + 1)?;
         }
     }
+
+    writeln!(f, "")?;
+
     Ok(())
 }
 
-impl<'a> fmt::Display for BorrowedError<'a> {
+fn render_error(error: &stream::Error, line: &str, row: u64, col: usize) -> Box<str> {
+    let mut output = String::new();
+    render_error_to_formatter(error, line, row, col, &mut output).unwrap();
+    output.into_boxed_str()
+}
+
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display(&self.error, self.line, self.row, self.col, f)
-    }
-}
-
-impl fmt::Display for OwnedError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display(&self.error, &self.line, self.row, self.col, f)
-    }
-}
-
-/// Result with `BorrowedError` as an error variant.
-///
-/// This type is also exported in the crate's root as `ReaderResult`,
-/// because it's returned by many methods from the [`Reader`](struct.Reader.html).
-///
-/// See the [`BorrowedError`](struct.BorrowedError.html) for more docs.
-///
-/// The owned equivalent of this type is [`OwnedResult`](type.OwnedResult.html).
-/// You can use [`to_owned`](trait.BorrowedResultExt.html#tymethod.to_owned)
-/// to convert to it.
-pub type BorrowedResult<'line, T> = ::std::result::Result<T, BorrowedError<'line>>;
-
-/// Result with `OwnedError` as an error variant.
-///
-/// See the [`OwnedError`](struct.OwnedError.html) for more docs.
-pub type OwnedResult<T> = ::std::result::Result<T, OwnedError>;
-
-/// Trait providing additional methods on `BorrowedResult`.
-///
-/// This trait is included in prelude.
-pub trait BorrowedResultExt<'a, T> {
-    /// Propagates an error, unless it's TooShort (returns None in that case).
-    ///
-    /// # Examples
-    ///
-    /// Summing all integers from a file (until the end),
-    /// with proper error handling.
-    ///
-    /// ```no_run
-    /// use whiteread::{Reader, ReaderResult};
-    /// use whiteread::prelude::*;
-    ///
-    /// fn sum_file() -> whiteread::ReaderResult<i64> {
-    ///     let mut reader = Reader::open("numbers.txt")?;
-    ///     let mut s: i64 = 0;
-    ///     while let Some(x) = reader.continue_::<i64>().none_on_too_short()? {
-    ///         s += x
-    ///     }
-    ///     Ok(s)
-    /// }
-    ///
-    fn none_on_too_short(self) -> BorrowedResult<'a, Option<T>>;
-
-    /// Converts the error variant from `BorrowedError` to `OwnedError`.
-    ///
-    /// See the [`BorrowedError`](struct.BorrowedError.html) and
-    /// [`OwnedError`](struct.OwnedError.html) for more details.
-    ///
-    /// The conversion is also performed by the `From::from` implementation
-    /// used by `try!` macro and the `?` (question mark) operator,
-    /// so you should rarely need this method.
-    fn to_owned(self) -> OwnedResult<T>;
-}
-
-/// Provides `pretty_unwrap` method that uses the `Display` trait.
-pub trait PrettyUnwrap {
-    type Target;
-
-    /// Works like `unwrap`, but prints the error message
-    /// to the stderr using the `Display` trait before panicking.
-    ///
-    /// Should be used instead of `unwrap` to nicely display
-    /// errors from [`ReaderResult`](type.OwnedResult.html).
-    fn pretty_unwrap(self) -> Self::Target;
-}
-
-impl<'a, T> BorrowedResultExt<'a, T> for BorrowedResult<'a, T> {
-    fn none_on_too_short(self) -> BorrowedResult<'a, Option<T>> {
-        match self {
-            Ok(x) => Ok(Some(x)),
-            Err(BorrowedError {
-                error: TooShort, ..
-            }) => Ok(None),
-            Err(e) => Err(e),
+        match self.rendered {
+            Some(ref rendered) => f.write_str(rendered),
+            None => fmt::Debug::fmt(self, f),
         }
     }
-
-    fn to_owned(self) -> OwnedResult<T> { self.map_err(BorrowedError::to_owned) }
 }
 
-impl<T, E> PrettyUnwrap for Result<T, E>
-where
-    E: fmt::Display,
-{
-    type Target = T;
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let _ = f
+            .debug_struct("Error")
+            .field("error", &self.error)
+            .field("row", &self.row)
+            .field("col", &self.col);
 
-    fn pretty_unwrap(self) -> T {
-        match self {
-            Ok(x) => x,
-            Err(e) => {
-                use self::io::Write;
-                writeln!(io::stderr(), "{}", e).ok();
-                panic!("PrettyUnwrap::pretty_unwrap failed");
+        if let Some(ref rendered) = self.rendered {
+            writeln!(f, ", rendered:")?;
+            for _ in 0..79 {
+                write!(f, "~")?;
             }
+            writeln!(f, "")?;
+            f.write_str(&rendered[..])?;
+            for _ in 0..79 {
+                write!(f, "~")?;
+            }
+            writeln!(f, "")?;
         }
+
+        write!(f, "}}")?;
+
+        Ok(())
     }
 }
 
-fn add_lineinfo<'line, B>(error: stream::Error, reader: &'line Reader<B>) -> BorrowedError<'line>
+/// Result with `Error` as an error variant.
+///
+/// See the [`Error`](struct.Error.html) for more docs.
+pub type Result<T> = ::std::result::Result<T, Error>;
+
+fn add_lineinfo<B>(error: stream::Error, reader: &Reader<B>) -> Error
 where
     B: io::BufRead,
 {
-    BorrowedError {
+    Error {
+        rendered: Some(render_error(&error, &reader.line, reader.row, reader.col)),
         error: error,
         row: reader.row,
         col: reader.col,
-        line: &reader.line,
     }
 }
 
 trait AddLineinfoExt<T> {
-    fn add_lineinfo<'line, B>(self, reader: &'line Reader<B>) -> BorrowedResult<'line, T>
+    fn add_lineinfo<B>(self, reader: &Reader<B>) -> Result<T>
     where
         B: io::BufRead;
 }
 
 impl<T> AddLineinfoExt<T> for stream::Result<T> {
-    fn add_lineinfo<'a, B>(self, reader: &'a Reader<B>) -> BorrowedResult<'a, T>
+    fn add_lineinfo<B>(self, reader: &Reader<B>) -> Result<T>
     where
         B: io::BufRead,
     {
         self.map_err(|e| add_lineinfo(e, reader))
     }
+}
+
+#[test]
+fn error_message() {
+    let mut r = Reader::new("\n1 2 3 four 5".as_bytes());
+    let error = r.finish::<Vec<i8>>().unwrap_err();
+    let expected = "parse error occured at
+2 | 1 2 3 four 5
+             ^\n";
+    assert_eq!(error.to_string(), expected);
+    assert!(format!("{:?}", error).contains(expected));
+}
+
+#[test]
+fn error_message_leftovers() {
+    let mut r = Reader::new("aa bb".as_bytes());
+    let error = r.line::<String>().unwrap_err();
+    let expected = "excessive input provided at
+1 | aa bb
+        ^\n";
+    assert_eq!(error.to_string(), expected);
+    assert!(format!("{:?}", error).contains(expected));
+}
+
+#[test]
+fn error_message_too_short() {
+    let mut r = Reader::new("".as_bytes());
+    let error = r.finish::<(String, String)>().unwrap_err();
+    let expected = "not enough input to parse a value at
+1 | 
+    ^\n";
+    assert_eq!(error.to_string(), expected);
+    assert!(format!("{:?}", error).contains(expected));
 }

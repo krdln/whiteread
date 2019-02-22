@@ -29,8 +29,18 @@ fn write_module<W: Write>(w: &mut W, ident: u32, publicity: &str, name: &str) ->
 
         if trimmed == "#[test]" {
             let ident = ident_len(line);
+
+            // Skip function declaration
             while ident_len(lines.next().unwrap()) == ident {}
-            while ident_len(lines.next().unwrap()) > ident {}
+
+            // Skip function body
+            loop {
+                let line = lines.next().unwrap();
+                if ident_len(line) == ident && line.trim() == "}" {
+                    break;
+                }
+            }
+
             continue;
         }
 
@@ -75,9 +85,8 @@ fn write_template<W: Write>(mut w: W) -> io::Result<()> {
         "{}",
         &r"
 use whiteread as w;
-use w::prelude::*;
 
-fn run() -> w::ReaderResult<()> {
+fn run() -> w::reader::Result<()> {
     let input = std::io::stdin();
     let input = input.lock();
     let mut input = w::Reader::new(input);
@@ -88,7 +97,7 @@ fn run() -> w::ReaderResult<()> {
 }
 
 fn main() {
-    run().pretty_unwrap()
+    run().unwrap()
 }
 
 // From https://github.com/krdln/whiteread on MIT license
