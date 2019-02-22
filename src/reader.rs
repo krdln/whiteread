@@ -387,36 +387,34 @@ fn render_error_to_formatter<F: fmt::Write>(
 ) -> fmt::Result {
     write!(f, "{}", error)?;
 
-    if row != 0 {
-        #[allow(deprecated)] // Rust 1.15 doesn't have trim_end_matches yet
-        let line = line.trim_right_matches(&['\n', '\r'][..]);
+    #[allow(deprecated)] // Rust 1.15 doesn't have trim_end_matches yet
+    let line = line.trim_right_matches(&['\n', '\r'][..]);
 
-        if line.len() <= 120 {
-            if col > line.len() {
-                col = line.len()
-            }
-            if (error.is_parse_error() || error.is_leftovers()) && col > 0 {
-                col -= 1;
-            }
+    if line.len() <= 120 {
+        if col > line.len() {
+            col = line.len()
+        }
+        if (error.is_parse_error() || error.is_leftovers()) && col > 0 {
+            col -= 1;
+        }
 
-            writeln!(f, " at")?;
-            let number = row.to_string();
-            write!(f, "{} | ", number)?;
-            writeln!(f, "{}", line)?;
-            for _ in 0..number.len() + 3 {
+        writeln!(f, " at")?;
+        let number = row.to_string();
+        write!(f, "{} | ", number)?;
+        writeln!(f, "{}", line)?;
+        for _ in 0..number.len() + 3 {
+            write!(f, " ")?;
+        }
+        for c in line[..col].chars() {
+            if c <= b' ' as char {
+                write!(f, "{}", c)?;
+            } else {
                 write!(f, " ")?;
             }
-            for c in line[..col].chars() {
-                if c <= b' ' as char {
-                    write!(f, "{}", c)?;
-                } else {
-                    write!(f, " ")?;
-                }
-            }
-            write!(f, "^")?;
-        } else {
-            write!(f, " at line {}, column {}", row, col + 1)?;
         }
+        write!(f, "^")?;
+    } else {
+        write!(f, " at line {}, column {}", row, col + 1)?;
     }
 
     writeln!(f, "")?;
@@ -475,8 +473,14 @@ fn add_lineinfo<B>(error: stream::Error, reader: &Reader<B>) -> Error
 where
     B: io::BufRead,
 {
+    let rendered = if reader.row != 0 {
+        Some(render_error(&error, &reader.line, reader.row, reader.col))
+    } else {
+        None
+    };
+
     Error {
-        rendered: Some(render_error(&error, &reader.line, reader.row, reader.col)),
+        rendered: rendered,
         error: error,
         row: reader.row,
         col: reader.col,
