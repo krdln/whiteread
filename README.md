@@ -32,14 +32,14 @@ and to be usable for parsing text input in format used in algorithmic contests.
 Reading an integer from stdin:
 
 ```rust
-let x: i32 = parse_line().unwrap();
+let x: i32 = parse_line()?;
 ```
 
 Tuples and vectors (nest everything as you like)!
 
 ```rust
-let tup: (i32, f64) = parse_string("  5  3.14 ").unwrap();
-let v: Vec<(String, u8)> = parse_string("one 1 two 2 three 3").unwrap();
+let tup: (i32, f64) = parse_string("  5  3.14 ")?;
+let v: Vec<(String, u8)> = parse_string("one 1 two 2 three 3")?;
 ```
 
 Wrapping `StdinLock` for non-line-based parsing...
@@ -49,13 +49,13 @@ let i = std::io::stdin();
 let mut i = Reader::new(i.lock());
 
 // (almost) equivalent to scanf("%d%d", &a, &b) or cin >> a >> b
-let (a, b): (i32, i32) = i.parse().unwrap();
+let (a, b): (i32, i32) = i.parse()?;
 ```
 
 ...or just for speed:
 
 ```rust
-while let Ok((x, y)) = i.line::<(usize, f32)>() {
+while let Some((x, y)) = i.line::<Option<(usize, f32)>>()? {
 	println!("{} {}", y, x);
 }
 ```
@@ -63,7 +63,7 @@ while let Ok((x, y)) = i.line::<(usize, f32)>() {
 Reading a file (can also use `Reader` for more control):
 
 ```rust
-let number: i32 = parse_file("number.txt").unwrap();
+let number: i32 = parse_file("number.txt")?;
 ```
 
 ## Installation

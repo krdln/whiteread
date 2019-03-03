@@ -83,10 +83,13 @@ impl StrExt for str {
 
 /// Trait for values that can be parsed from stream of whitespace-separated words.
 ///
-/// Implementations for primtives consume and parse one element from a stream
+/// Implementations for primitives consume and parse one element from a stream
 /// (advancing a stream).
 /// Implementations for tuples just parse elements from left to right.
 /// Implementation for vector parses till the end of stream.
+///
+/// See [`adapters`](crate::adapters) module for more types that
+/// implement this trait in a special way.
 ///
 /// # Examples
 ///
@@ -106,6 +109,10 @@ impl StrExt for str {
 /// // tuples (up to 6)
 /// assert_eq!(parse_string("2 1 3 4").ok(), Some( ((2, 1), (3, 4)) ));
 ///
+/// // optional elements at the end of stream
+/// assert_eq!(parse_string("2 1 3").ok(), Some( ((2, 1), Some(3)) ));
+/// assert_eq!(parse_string("2 1").ok(), Some( ((2, 1), None::<i32>) ));
+///
 /// // eager vector
 /// assert_eq!(parse_string("2 1 3 4").ok(), Some( vec![2, 1, 3, 4] ));
 ///
@@ -119,16 +126,15 @@ impl StrExt for str {
 /// assert_eq!(parse_string("a 1 b 2").ok(), Some( vec![('a', 1), ('b', 2)] ));
 /// ```
 ///
-/// There are a few more structs in this module,
-/// which implement the `FromStream` trait in various way.
-/// See their definition for more explanation.
+/// There are a few more adapter structs in [`adapters`](crate::adapters) module,
+/// which implement the `FromStream` trait in various ways.
 pub trait FromStream: Sized {
     fn read<I: StrStream>(it: &mut I) -> Result<Self>;
 }
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-/// Specifies the flavour of [`TooShort`](TooShort) error
+/// Specifies the flavour of [`TooShort`](Error::TooShort) error
 #[derive(Debug)]
 pub enum Progress {
     /// The stream didn't contain any data
@@ -336,14 +342,30 @@ impl_tuple!(A, B, C, D);
 impl_tuple!(A, B, C, D, E);
 impl_tuple!(A, B, C, D, E, F);
 
+/// `Option<T>` is read from the stream in a similar way
+/// as `T`, except of returning `None` instead of
+/// [`TooShort(Nothing)`](Progress::Nothing) error variant.
+///
+/// This allows for graceful handling of end-of-stream condition.
+///
+/// Note that partially parsed value (eg. half of a pair) is still
+/// considered an error.
+impl<T: FromStream> FromStream for Option<T> {
+    fn read<I: StrStream>(it: &mut I) -> Result<Option<T>> {
+        match FromStream::read(it) {
+            Err(Error::TooShort(Progress::Nothing)) => Ok(None),
+            result => Ok(Some(result?)),
+        }
+    }
+}
+
+/// Vector of elements is read by attempting to read elements
+/// from stream until it's drained.
 impl<T: FromStream> FromStream for Vec<T> {
     fn read<I: StrStream>(it: &mut I) -> Result<Vec<T>> {
         let mut v = vec![];
-        loop {
-            match FromStream::read(it) {
-                Err(Error::TooShort(Progress::Nothing)) => break,
-                x => v.push(x?),
-            }
+        while let Some(x) = FromStream::read(it)? {
+            v.push(x);
         }
         Ok(v)
     }

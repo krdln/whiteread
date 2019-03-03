@@ -5,7 +5,12 @@
 //! of a placeholder, and `Lengthed` allows to read a vector
 //! prepended by its length.
 //!
+//! See also [implementation of `FromStream` for std types][impls]
+//! which among implementation for primitives and strings,
+//! contains implementation on tuples, `Vec` and `Option`.
+//!
 //! [`FromStream`]: ../stream/trait.FromStream.html
+//! [impls]: ../stream/trait.FromStream.html#foreign-impls
 
 use super::stream::{FromStream, Result, ResultExt, StrStream};
 
