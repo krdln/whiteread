@@ -1,6 +1,6 @@
 language: rust
 rust:
-  - 1.15.1
+  - 1.18.0
   - stable
   - beta
 cache: cargo
