@@ -128,6 +128,16 @@ pub trait FromStream: Sized {
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
+/// Specifies the flavour of [`TooShort`](TooShort) error
+#[derive(Debug)]
+pub enum Progress {
+    /// The stream didn't contain any data
+    Nothing,
+
+    /// The stream ended in the middle of parsing
+    Partial,
+}
+
 /// Error which can occur while parsing `FromStream` object.
 ///
 /// It's convertible into `io::Error`, so it composes well with other reading functions.
@@ -137,14 +147,16 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 /// ```
 /// # use whiteread::parse_string;
 /// # use whiteread::stream::Error::*;
-/// if let Err(TooShort) = parse_string::<(u8, u16)>("1") {} else { panic!(); }
+/// # use whiteread::stream::Progress::*;
+/// if let Err(TooShort(Nothing)) = parse_string::<(u8, u16)>("") {} else { panic!(); }
+/// if let Err(TooShort(Partial)) = parse_string::<(u8, u16)>("1") {} else { panic!(); }
 /// if let Err(Leftovers) = parse_string::<char>("x y z") {} else { panic!(); }
 /// if let Err(ParseError) = parse_string::<i32>("seven") {} else { panic!(); }
 /// ```
 #[derive(Debug)]
 pub enum Error {
     /// There was not enough input to parse a value.
-    TooShort,
+    TooShort(Progress),
 
     /// Excessive input was provided.
     Leftovers,
@@ -158,13 +170,33 @@ pub enum Error {
 
 /// # Variants checking
 impl Error {
+    /// Checks if error variant is [`TooShort`](Error::TooShort)
     pub fn is_too_short(&self) -> bool {
         match *self {
-            Error::TooShort => true,
+            Error::TooShort(_) => true,
             _ => false,
         }
     }
 
+    /// Checks if error variant is [`Nothing`](Progress::Nothing) flavour
+    /// of [`TooShort`](Error::TooShort)
+    pub fn is_nothing(&self) -> bool {
+        match *self {
+            Error::TooShort(Progress::Nothing) => true,
+            _ => false,
+        }
+    }
+
+    /// Checks if error variant is [`Partial`](Progress::Partial) flavour
+    /// of [`TooShort`](Error::TooShort)
+    pub fn is_partial(&self) -> bool {
+        match *self {
+            Error::TooShort(Progress::Partial) => true,
+            _ => false,
+        }
+    }
+
+    /// Checks if error variant is [`Leftovers`](Error::Leftovers)
     pub fn is_leftovers(&self) -> bool {
         match *self {
             Error::Leftovers => true,
@@ -172,6 +204,7 @@ impl Error {
         }
     }
 
+    /// Checks if error variant is [`ParseError`](Error::ParseError)
     pub fn is_parse_error(&self) -> bool {
         match *self {
             Error::ParseError => true,
@@ -179,6 +212,7 @@ impl Error {
         }
     }
 
+    /// Checks if error variant is [`IoError`](Error::IoError)
     pub fn is_io_error(&self) -> bool {
         match *self {
             Error::IoError(_) => true,
@@ -194,7 +228,8 @@ impl From<io::Error> for Error {
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::TooShort => "not enough input to parse a value",
+            Error::TooShort(Progress::Nothing) => "not enough input to start parsing a value",
+            Error::TooShort(Progress::Partial) => "not enough input to finish parsing a value",
             Error::Leftovers => "excessive input provided",
             Error::ParseError => "parse error occured",
             Error::IoError(ref e) => e.description(),
@@ -228,52 +263,72 @@ impl From<Error> for io::Error {
         }
     }
 }
+
+pub(crate) trait ResultExt {
+    /// Treats the value as a subsequent part of bigger value,
+    /// so we can assume that some part of it had already been parsed,
+    /// and always emit `TooShort(Partial)`, never `TooShort(Nothing)`.
+    fn as_subsequent(self) -> Self;
+}
+
+impl<T> ResultExt for Result<T> {
+    fn as_subsequent(mut self) -> Self {
+        if let Err(Error::TooShort(ref mut kind)) = self {
+            *kind = Progress::Partial;
+        }
+        self
+    }
+}
+
 // not using T: FromStr here because of coherence and tuples
-macro_rules! white {
+macro_rules! impl_using_from_str {
     ($T:ident) => {
         impl FromStream for $T {
             fn read<I: StrStream>(it: &mut I) -> Result<$T> {
                 try!(it.next())
-                    .ok_or(Error::TooShort)
+                    .ok_or(Error::TooShort(Progress::Nothing))
                     .and_then(|s| s.parse().or(Err(Error::ParseError)))
             }
         }
     };
 }
 
-white!(bool);
-white!(u8);
-white!(u16);
-white!(u32);
-white!(u64);
-white!(usize);
-white!(i8);
-white!(i16);
-white!(i32);
-white!(i64);
-white!(isize);
-white!(String);
-white!(f32);
-white!(f64);
+impl_using_from_str!(bool);
+impl_using_from_str!(u8);
+impl_using_from_str!(u16);
+impl_using_from_str!(u32);
+impl_using_from_str!(u64);
+impl_using_from_str!(usize);
+impl_using_from_str!(i8);
+impl_using_from_str!(i16);
+impl_using_from_str!(i32);
+impl_using_from_str!(i64);
+impl_using_from_str!(isize);
+impl_using_from_str!(String);
+impl_using_from_str!(f32);
+impl_using_from_str!(f64);
 
 impl FromStream for char {
     fn read<I: StrStream>(it: &mut I) -> Result<char> {
         let s = it.next()?;
-        s.and_then(|s| s.chars().next()).ok_or(Error::TooShort)
+        s.and_then(|s| s.chars().next()).ok_or(Error::TooShort(Progress::Nothing))
     }
 }
 
+impl FromStream for () {
+    fn read<I: StrStream>(_: &mut I) -> Result<Self> { Ok(()) }
+}
+
 macro_rules! impl_tuple {
-    ( $($x:ident),* ) => {
-        impl< $( $x: FromStream ),* > FromStream for ( $( $x, )* ) {
-            fn read<I: StrStream>(_it: &mut I) -> Result<Self> {
-                Ok(( $( $x::read(_it)?, )* ))
+    ( $first:ident $(, $x:ident)* ) => {
+        impl< $first: FromStream $( , $x: FromStream )* > FromStream for ( $first, $( $x ),* ) {
+            fn read<I: StrStream>(it: &mut I) -> Result<Self> {
+                Ok(( $first::read(it)?, $( $x::read(it).as_subsequent()? ),* ))
             }
         }
     };
 }
 
-impl_tuple!();
 impl_tuple!(A);
 impl_tuple!(A, B);
 impl_tuple!(A, B, C);
@@ -286,10 +341,17 @@ impl<T: FromStream> FromStream for Vec<T> {
         let mut v = vec![];
         loop {
             match FromStream::read(it) {
-                Err(Error::TooShort) => break,
+                Err(Error::TooShort(Progress::Nothing)) => break,
                 x => v.push(x?),
             }
         }
         Ok(v)
     }
+}
+
+#[test]
+fn partial_vec() {
+    type V = Vec<(u8, u8)>;
+    assert_eq!(super::parse_string::<V>("1 2 3 4").unwrap().len(), 2);
+    assert!(super::parse_string::<V>("1 2 3 4 5").unwrap_err().is_partial());
 }

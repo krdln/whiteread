@@ -7,7 +7,7 @@
 //!
 //! [`FromStream`]: ../stream/trait.FromStream.html
 
-use super::stream::{FromStream, Result, StrStream};
+use super::stream::{FromStream, Result, ResultExt, StrStream};
 
 /// Used to consume and ignore one whitespace-separated value
 ///
@@ -102,7 +102,7 @@ impl<T: FromStream> FromStream for Lengthed<T> {
             if v.len() == sz {
                 return Ok(Lengthed(v));
             }
-            v.push(FromStream::read(it)?);
+            v.push(FromStream::read(it).as_subsequent()?);
         }
     }
 }
@@ -138,7 +138,8 @@ impl<T: FromStream + Default + PartialEq> FromStream for Zeroed<T> {
         let mut v = vec![];
         let zero = Default::default();
         loop {
-            let x = FromStream::read(it)?;
+            let result = FromStream::read(it);
+            let x = if v.is_empty() { result? } else { result.as_subsequent()? };
             if x == zero {
                 return Ok(Zeroed(v));
             } else {
@@ -146,4 +147,23 @@ impl<T: FromStream + Default + PartialEq> FromStream for Zeroed<T> {
             }
         }
     }
+}
+
+#[test]
+fn partial_lengthed() {
+    type V = Lengthed<(u8, u8)>;
+    assert_eq!(super::parse_string::<V>("2  10 11  12 13").unwrap().0.len(), 2);
+    assert!(super::parse_string::<V>("2  10 11").unwrap_err().is_partial());
+    assert!(super::parse_string::<V>("2").unwrap_err().is_partial());
+    assert!(super::parse_string::<V>("").unwrap_err().is_nothing());
+}
+
+#[test]
+fn partial_zeroed() {
+    type V = Zeroed<(u8, u8)>;
+    assert_eq!(super::parse_string::<V>("10 11  12 13  0 0").unwrap().0.len(), 2);
+    assert!(super::parse_string::<V>("10 11  0").unwrap_err().is_partial());
+    assert!(super::parse_string::<V>("10 11").unwrap_err().is_partial());
+    assert!(super::parse_string::<V>("10").unwrap_err().is_partial());
+    assert!(super::parse_string::<V>("").unwrap_err().is_nothing());
 }

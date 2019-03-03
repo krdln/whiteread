@@ -10,6 +10,7 @@ use std::path::Path;
 
 use super::stream;
 use super::stream::Error::*;
+use super::stream::Progress;
 use super::FromStream;
 
 use super::stream::SplitAsciiWhitespace;
@@ -69,17 +70,17 @@ use super::stream::StrStream;
 /// assert_eq!(r.line().ok(), Some(8));
 /// // from now, everything will return TooShort
 /// # match r.parse::<u8>().map_err(|e| e.into_inner()) {
-/// #     Err(TooShort) => (),
+/// #     Err(TooShort(_)) => (),
 /// #     _ => panic!()
 /// # }
 /// #
 /// # match r.line::<u8>().map_err(|e| e.into_inner()) {
-/// #     Err(TooShort) => (),
+/// #     Err(TooShort(_)) => (),
 /// #     _ => panic!()
 /// # }
 /// #
 /// # match r.next_line().map_err(|e| e.into_inner()) {
-/// #     Err(TooShort) => (),
+/// #     Err(TooShort(_)) => (),
 /// #     _ => panic!()
 /// # }
 /// ```
@@ -221,7 +222,7 @@ impl<B: io::BufRead> Reader<B> {
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn line<T: FromStream>(&mut self) -> Result<T> {
         if let None = self.read_line()? {
-            return Err(TooShort).add_lineinfo(self);
+            return Err(TooShort(Progress::Nothing)).add_lineinfo(self);
         };
         self.finish_line()
     }
@@ -229,7 +230,7 @@ impl<B: io::BufRead> Reader<B> {
     /// Reads a new line from input and parses some part of it into FromStream value.
     pub fn start_line<T: FromStream>(&mut self) -> Result<T> {
         if let None = self.read_line()? {
-            return Err(TooShort).add_lineinfo(self);
+            return Err(TooShort(Progress::Nothing)).add_lineinfo(self);
         };
         self.continue_line()
     }
@@ -254,7 +255,7 @@ impl<B: io::BufRead> Reader<B> {
     /// Additionaly to usual parse errors, this method may also return
     /// [`Leftovers`](../white/enum.Error.html#variant.Leftovers).
     pub fn finish_line<T: FromStream>(&mut self) -> Result<T> {
-        // safe -- WA for borrowck bug, should be fixed by NLL
+        // safe -- WA for borrowck bug, should be fixed by NLL + Polonius
         let value = unsafe { erase_lifetime(self) }.continue_line()?;
         if let Some(_) = self.next_within_line() {
             Err(Leftovers).add_lineinfo(self)
@@ -274,7 +275,7 @@ impl<B: io::BufRead> Reader<B> {
     /// and will be available for `continue_` and `continue_line`.
     pub fn next_line(&mut self) -> Result<&str> {
         if let None = self.read_line()? {
-            return Err(TooShort).add_lineinfo(self);
+            return Err(TooShort(Progress::Nothing)).add_lineinfo(self);
         }
         Ok(&self.line)
     }
@@ -286,7 +287,7 @@ impl<B: io::BufRead> Reader<B> {
 impl<B: io::BufRead> StrStream for Reader<B> {
     fn next(&mut self) -> io::Result<Option<&str>> {
         loop {
-            // safe -- WA for borrowck bug, should be fixed by NLL
+            // safe -- WA for borrowck bug, should be fixed by NLL + Polonius
             match unsafe { erase_lifetime(self) }.next_within_line() {
                 None => (),
                 some => return Ok(some),
@@ -528,7 +529,7 @@ fn error_message_leftovers() {
 fn error_message_too_short() {
     let mut r = Reader::new("".as_bytes());
     let error = r.finish::<(String, String)>().unwrap_err();
-    let expected = "not enough input to parse a value at
+    let expected = "not enough input to start parsing a value at
 1 | 
     ^\n";
     assert_eq!(error.to_string(), expected);
