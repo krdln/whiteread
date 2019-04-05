@@ -1,11 +1,11 @@
 //! Crate for reading whitespace-separated values.
 //!
-//! The crate defines a trait [`FromStream`](stream/trait.FromStream.html), which
+//! The crate defines a trait [`FromStream`](stream::FromStream), which
 //! describes types that can be parsed from whitespace-separated words,
-//! which includes eg. integers, tuples and vectors.
+//! which includes eg. integers, tuples, vectors and various [adapters].
 //!
 //! The definition of whitespace used in this crate is described in
-//! [`SplitAsciiWhitespace`](stream/struct.SplitAsciiWhitespace.html).
+//! [`SplitAsciiWhitespace`](stream::SplitAsciiWhitespace).
 //!
 //! # Examples
 //!
@@ -24,21 +24,20 @@
 //! let x: i32 = parse_line().unwrap();
 //! ```
 //!
-//! Efficient reading from stdin (newline-agnostic) with [`Reader`](reader/struct.Reader.html).
-//! Stops on error.
+//! Efficient reading from stdin (newline-agnostic) with [`Reader`](reader::Reader).
 //!
 //! ```no_run
 //! # use whiteread::Reader;
+//! # foo().unwrap();
+//! # fn foo() -> whiteread::reader::Result<()> {
 //! let i = std::io::stdin();
 //! let mut i = Reader::new(i.lock());
-//! while let Ok(f) = i.parse::<f64>() {
+//! while let Some(f) = i.parse::<Option<f64>>()? {
 //!     println!("{}", f);
 //! }
+//! # Ok(())
+//! # }
 //! ```
-//!
-//! If you want better error handling in while-let loops
-//! (stop on end of input, but propagate all the other errors),
-//! use [`none_on_too_short`](reader/trait.BorrowedResultExt.html#tymethod.none_on_too_short)
 
 use std::io;
 use std::path::Path;
@@ -53,12 +52,12 @@ pub use self::reader::Reader;
 
 // Helpers -----------------------------------------------------------------------------------------
 
-/// Helper function for parsing `FromStream` value from one line of stdin.
+/// Helper function for parsing [`FromStream`] value from one line of stdin.
 ///
 /// Leftovers are considered an error.
 /// This function locks a mutex and allocates a buffer, so
 /// don't use it when reading more than few lines –
-/// use [`Reader`](reader/struct.Reader.html) instead.
+/// use [`Reader`](reader::Reader) instead.
 ///
 /// # Examples
 /// ```no_run
@@ -71,7 +70,7 @@ pub fn parse_line<T: FromStream>() -> stream::Result<T> {
     parse_string(&line)
 }
 
-/// Helper function for parsing `FromStream` value from string. Leftovers are considered an error.
+/// Helper function for parsing [`FromStream`] value from string. Leftovers are considered an error.
 ///
 /// # Examples
 /// ```
@@ -90,7 +89,7 @@ pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
     }
 }
 
-/// Parses a whole file as a `FromStream` value
+/// Parses a whole file as a [`FromStream`] value
 ///
 /// Calling this function is equivalent to:
 ///
@@ -105,7 +104,7 @@ pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
 /// ```
 ///
 /// If you want to parse the file in multiple steps,
-/// use [`Reader::open`](reader/struct.Reader.html#method.open).
+/// use [`Reader::open`](crate::reader::Reader::open).
 ///
 /// # Examples
 ///

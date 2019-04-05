@@ -1,6 +1,6 @@
-//! This module defines the `Reader` struct.
+//! This module defines the [`Reader`] struct.
 //!
-//! See the [`Reader`](struct.Reader.html) for docs.
+//! See the [`Reader`] for docs.
 
 use std::error::Error as StdError;
 use std::fmt;
@@ -135,7 +135,7 @@ impl Reader<io::BufReader<fs::File>> {
 /// ## Errors
 ///
 /// These methods may return
-/// [`TooShort`, `ParseError` or `IoError`](../white/enum.Error.html) error variant.
+/// [`TooShort`, `ParseError` or `IoError`](crate::stream::Error) error variant.
 /// If they return other variants too, it is stated explicitely.
 impl<B: io::BufRead> Reader<B> {
     /// Parses a FromStream value without specialy treating newlines (just like `scanf` or `cin>>`)
@@ -164,7 +164,7 @@ impl<B: io::BufRead> Reader<B> {
     /// ### Errors
     ///
     /// Additionaly to usual parse errors, this method may also return
-    /// [`Leftovers`](../white/enum.Error.html#variant.Leftovers).
+    /// [`Leftovers`](crate::stream::Error::Leftovers).
     pub fn finish<T: FromStream>(&mut self) -> Result<T> {
         let value = self.parse()?;
         if let Ok(Some(_)) = StrStream::next(self) {
@@ -191,7 +191,7 @@ fn test_finish() {
 /// ## Errors
 ///
 /// These methods may return
-/// [`TooShort`, `ParseError` or `IoError`](../white/enum.Error.html) error variant.
+/// [`TooShort`, `ParseError` or `IoError`](crate::stream::Error) error variant.
 /// If they return other variants too, it is stated explicitely.
 impl<B: io::BufRead> Reader<B> {
     fn read_line(&mut self) -> io::Result<Option<()>> {
@@ -253,7 +253,7 @@ impl<B: io::BufRead> Reader<B> {
     /// ### Errors
     ///
     /// Additionaly to usual parse errors, this method may also return
-    /// [`Leftovers`](../white/enum.Error.html#variant.Leftovers).
+    /// [`Leftovers`](crate::stream::Error::Leftovers).
     pub fn finish_line<T: FromStream>(&mut self) -> Result<T> {
         // safe -- WA for borrowck bug, should be fixed by NLL + Polonius
         let value = unsafe { erase_lifetime(self) }.continue_line()?;
@@ -302,7 +302,7 @@ impl<B: io::BufRead> StrStream for Reader<B> {
 
 /// An error type containing a lineinfo.
 ///
-/// This error is returned from a [`Reader`](struct.Reader.html)'s methods,
+/// This error is returned from a [`Reader`]'s methods,
 /// and it contains information about location of the error (line and column).
 ///
 /// The error message provides a line number and a column marker rendered underneath
@@ -467,7 +467,7 @@ impl fmt::Debug for Error {
 
 /// Result with `Error` as an error variant.
 ///
-/// See the [`Error`](struct.Error.html) for more docs.
+/// See the [`Error`] for more docs.
 pub type Result<T> = ::std::result::Result<T, Error>;
 
 fn add_lineinfo<B>(error: stream::Error, reader: &Reader<B>) -> Error

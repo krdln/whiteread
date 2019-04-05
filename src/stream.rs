@@ -1,8 +1,8 @@
-//! This module defines the `StrStream` and `FromStream` traits
+//! This module defines the [`StrStream`][stream::StrStream] and [`FromStream`] traits
 //!
 //! The [`FromStream`] trait defines how to convert a
-//! [`StrStream`](trait.StrStream.html) (a stream of strings)
-//! to a value. See [its definition][`FromStream`] for more documentation.
+//! [`StrStream`][stream::StrStream] (a stream of strings)
+//! to a value. See [its definition](FromStream) for more documentation.
 
 use std::io;
 use std::str::SplitWhitespace;
@@ -16,7 +16,7 @@ impl<'a> StrStream for SplitWhitespace<'a> {
     fn next(&mut self) -> io::Result<Option<&str>> { Ok(Iterator::next(self)) }
 }
 
-/// Fast version of std::str::SplitWhitespace, but with some drawbacks.
+/// Fast version of [`std::str::SplitWhitespace`], but with some drawbacks.
 ///
 /// It considers to be whitespace everything with codepoint <= 0x20
 /// (this includes " \t\n\r", but also some other unprintable characters).
@@ -144,9 +144,10 @@ pub enum Progress {
     Partial,
 }
 
-/// Error which can occur while parsing `FromStream` object.
+/// Error which can occur while parsing [`FromStream`] object.
 ///
-/// It's convertible into `io::Error`, so it composes well with other reading functions.
+/// It's convertible into [`io::Error`](::std::io::Error),
+/// so it composes well with other reading functions.
 ///
 /// # Examples
 ///

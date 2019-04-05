@@ -1,4 +1,4 @@
-//! This module defines adapters for `FromStream` trait.
+//! This module defines adapters for [`FromStream`] trait.
 //!
 //! This module contains a few structs, which implement
 //! [`FromStream`] in a special way. Eg. `Skip` serves the role
@@ -9,7 +9,6 @@
 //! which among implementation for primitives and strings,
 //! contains implementation on tuples, `Vec` and `Option`.
 //!
-//! [`FromStream`]: ../stream/trait.FromStream.html
 //! [impls]: ../stream/trait.FromStream.html#foreign-impls
 
 use super::stream::{FromStream, Result, ResultExt, StrStream};
