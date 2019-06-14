@@ -153,6 +153,40 @@ impl<T: FromStream + Default + PartialEq> FromStream for Zeroed<T> {
     }
 }
 
+/// Hints the parsing function not to render errors
+///
+/// By default, [`Reader`](crate::Reader) will pretty-print the error location, [like
+/// so](crate::reader::Error).
+///
+/// This struct is intended to be used when an error is expected and rendering the lineinfo (which
+/// creates an allocation to remember the source line) is not needed.
+///
+/// # Examples
+///
+/// ```
+/// use whiteread::reader::Reader;
+/// use whiteread::adapters::WithCheapError;
+/// use std::io::Cursor;
+///
+/// // The displayed error doesn't contain the rendered lineinfo.
+/// let result = Reader::new(Cursor::new("foo")).parse::<WithCheapError<i32>>();
+/// assert!(!result.unwrap_err().to_string().contains("foo"));
+///
+/// // By default the error line is pretty printed.
+/// let result = Reader::new(Cursor::new("foo")).parse::<i32>();
+/// assert!(result.unwrap_err().to_string().contains("foo"));
+/// ```
+#[derive(Default, Debug)]
+pub struct WithCheapError<T>(pub T);
+
+impl<T: FromStream> FromStream for WithCheapError<T> {
+    fn read<I: StrStream>(it: &mut I) -> Result<WithCheapError<T>> {
+        T::read(it).map(WithCheapError)
+    }
+
+    const REQUEST_CHEAP_ERROR: bool = true;
+}
+
 #[test]
 fn partial_lengthed() {
     type V = Lengthed<(u8, u8)>;

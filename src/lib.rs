@@ -1,3 +1,6 @@
+// Remove when bumping minimum Rust version to 1.27
+#![allow(bare_trait_objects)]
+
 //! Crate for reading whitespace-separated values.
 //!
 //! The crate defines a trait [`FromStream`](stream::FromStream), which

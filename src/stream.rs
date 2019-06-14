@@ -129,7 +129,17 @@ impl StrExt for str {
 /// There are a few more adapter structs in [`adapters`](crate::adapters) module,
 /// which implement the `FromStream` trait in various ways.
 pub trait FromStream: Sized {
+    /// Reads a value from a str-producing stream.
     fn read<I: StrStream>(it: &mut I) -> Result<Self>;
+
+    /// Whether a function returning this type should produce cheap errors instead of
+    /// pretty-printed ones.
+    ///
+    /// For user-facing errors, this should be set to false, so that user can see a nice rendered
+    /// error. This is the default behaviour.  If you expect the error to happen on a hot path and
+    /// you don't just pass it up, this should be set to false. See
+    /// [`WithCheapError`](crate::adapters::WithCheapError).
+    const REQUEST_CHEAP_ERROR: bool = false;
 }
 
 pub type Result<T> = ::std::result::Result<T, Error>;

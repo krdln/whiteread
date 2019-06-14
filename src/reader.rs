@@ -140,7 +140,7 @@ impl Reader<io::BufReader<fs::File>> {
 impl<B: io::BufRead> Reader<B> {
     /// Parses a FromStream value without specialy treating newlines (just like `scanf` or `cin>>`)
     pub fn continue_<T: FromStream>(&mut self) -> Result<T> {
-        FromStream::read(self).add_lineinfo(self)
+        FromStream::read(self).add_lineinfo_this_type(self)
     }
 
     /// Same as `continue_`.
@@ -148,7 +148,7 @@ impl<B: io::BufRead> Reader<B> {
     /// Using `continue_` over `parse` is preferred, as it conveys better
     /// which part of input will be parsed.
     pub fn parse<T: FromStream>(&mut self) -> Result<T> {
-        FromStream::read(self).add_lineinfo(self)
+        FromStream::read(self).add_lineinfo_this_type(self)
     }
 
     /// Just .continue_().unwrap().
@@ -168,7 +168,7 @@ impl<B: io::BufRead> Reader<B> {
     pub fn finish<T: FromStream>(&mut self) -> Result<T> {
         let value = self.parse()?;
         if let Ok(Some(_)) = StrStream::next(self) {
-            Err(stream::Error::Leftovers).add_lineinfo(self)
+            Err(stream::Error::Leftovers).add_lineinfo_this_type(self)
         } else {
             Ok(value)
         }
@@ -222,7 +222,7 @@ impl<B: io::BufRead> Reader<B> {
     /// Additionaly to usual parse errors, this method may also return `Leftovers`.
     pub fn line<T: FromStream>(&mut self) -> Result<T> {
         if let None = self.read_line()? {
-            return Err(TooShort(Progress::Nothing)).add_lineinfo(self);
+            return Err(TooShort(Progress::Nothing)).add_lineinfo::<_, T>(self);
         };
         self.finish_line()
     }
@@ -230,7 +230,7 @@ impl<B: io::BufRead> Reader<B> {
     /// Reads a new line from input and parses some part of it into FromStream value.
     pub fn start_line<T: FromStream>(&mut self) -> Result<T> {
         if let None = self.read_line()? {
-            return Err(TooShort(Progress::Nothing)).add_lineinfo(self);
+            return Err(TooShort(Progress::Nothing)).add_lineinfo::<_, T>(self);
         };
         self.continue_line()
     }
@@ -243,7 +243,7 @@ impl<B: io::BufRead> Reader<B> {
             self.col = splitter.position();
             result
         };
-        result.add_lineinfo(self)
+        result.add_lineinfo_this_type(self)
     }
 
     /// Parses remaining part of current line into FromStream value.
@@ -258,7 +258,7 @@ impl<B: io::BufRead> Reader<B> {
         // safe -- WA for borrowck bug, should be fixed by NLL + Polonius
         let value = unsafe { erase_lifetime(self) }.continue_line()?;
         if let Some(_) = self.next_within_line() {
-            Err(Leftovers).add_lineinfo(self)
+            Err(Leftovers).add_lineinfo_this_type(self)
         } else {
             Ok(value)
         }
@@ -275,7 +275,7 @@ impl<B: io::BufRead> Reader<B> {
     /// and will be available for `continue_` and `continue_line`.
     pub fn next_line(&mut self) -> Result<&str> {
         if let None = self.read_line()? {
-            return Err(TooShort(Progress::Nothing)).add_lineinfo(self);
+            return Err(TooShort(Progress::Nothing)).add_lineinfo::<_, ()>(self);
         }
         Ok(&self.line)
     }
@@ -317,6 +317,8 @@ impl<B: io::BufRead> StrStream for Reader<B> {
 /// The lineinfo will be displayed when using `Display` (like in `println!("{}", e)`)
 /// or `Debug` formatting (like in `unwrap`), although `Display` is preferred.
 ///
+/// The pretty-printed lineinfo won't be available if [`FromStr.REQUEST_CHEAP_ERROR`] is set on
+/// the returned type.
 pub struct Error {
     error: stream::Error,
     /// 1-indexed row or 0 in case of an IO error
@@ -470,11 +472,11 @@ impl fmt::Debug for Error {
 /// See the [`Error`] for more docs.
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-fn add_lineinfo<B>(error: stream::Error, reader: &Reader<B>) -> Error
+fn add_lineinfo<B, T: FromStream>(error: stream::Error, reader: &Reader<B>) -> Error
 where
     B: io::BufRead,
 {
-    let rendered = if reader.row != 0 {
+    let rendered = if reader.row != 0 && T::REQUEST_CHEAP_ERROR == false {
         Some(render_error(&error, &reader.line, reader.row, reader.col))
     } else {
         None
@@ -488,18 +490,31 @@ where
     }
 }
 
-trait AddLineinfoExt<T> {
-    fn add_lineinfo<B>(self, reader: &Reader<B>) -> Result<T>
+trait AddLineinfoExt<R> {
+    /// Adds lineinfo and conditionally renders an error based on T::REQUEST_CHEAP_ERROR
+    ///
+    /// Note that T may be different from R
+    fn add_lineinfo<B, T: FromStream>(self, reader: &Reader<B>) -> Result<R>
     where
         B: io::BufRead;
+
+    /// Adds lineinfo and conditionally renders an error based on R::REQUEST_CHEAP_ERROR
+    fn add_lineinfo_this_type<B>(self, reader: &Reader<B>) -> Result<R>
+    where
+        B: io::BufRead,
+        R: FromStream,
+        Self: Sized,
+    {
+        self.add_lineinfo::<B, R>(reader)
+    }
 }
 
-impl<T> AddLineinfoExt<T> for stream::Result<T> {
-    fn add_lineinfo<B>(self, reader: &Reader<B>) -> Result<T>
+impl<R> AddLineinfoExt<R> for stream::Result<R> {
+    fn add_lineinfo<B, T: FromStream>(self, reader: &Reader<B>) -> Result<R>
     where
         B: io::BufRead,
     {
-        self.map_err(|e| add_lineinfo(e, reader))
+        self.map_err(|e| add_lineinfo::<B, T>(e, reader))
     }
 }
 
