@@ -45,14 +45,13 @@ let v: Vec<(String, u8)> = parse_string("one 1 two 2 three 3")?;
 Wrapping `StdinLock` for non-line-based parsing...
 
 ```rust
-let i = std::io::stdin();
-let mut i = Reader::new(i.lock());
+let mut i = Reader::from_stdin_naive();
 
 // (almost) equivalent to scanf("%d%d", &a, &b) or cin >> a >> b
 let (a, b): (i32, i32) = i.parse()?;
 ```
 
-...or just for speed:
+...or just for speed (the line-buffer will be allocated just once):
 
 ```rust
 while let Some((x, y)) = i.line::<Option<(usize, f32)>>()? {
@@ -64,6 +63,14 @@ Reading a file (can also use `Reader` for more control):
 
 ```rust
 let number: i32 = parse_file("number.txt")?;
+```
+
+On failure, a rendered error will be provided by default, even when unwrapping, eg.:
+
+```console
+Error: excessive input provided at
+6 | hello world 1 2 3
+                ^
 ```
 
 ## Installation

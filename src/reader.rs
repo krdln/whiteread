@@ -108,6 +108,46 @@ impl<B: io::BufRead> Reader<B> {
     }
 }
 
+impl Reader<io::BufReader<io::Stdin>> {
+    /// Wraps stdin in the reader making some assumptions
+    ///
+    /// This is a helper that allows constructing a Reader from [`io::stdin`](std::io::stdin) in
+    /// one function.  The usual way to do it needs a separate binding for stdin, because of how
+    /// [`StdinLock`](std::io::StdinLock) works:
+    ///
+    /// ```no_run
+    /// # use whiteread::reader::Reader;
+    /// let stdin = std::io::stdin();
+    /// let mut reader = Reader::new(stdin.lock());
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// This struct allows you to just call
+    ///
+    /// ```no_run
+    /// # use whiteread::reader::Reader;
+    /// let mut reader = Reader::from_stdin_naive();
+    /// ```
+    ///
+    /// This is _almost_ equivalent to previous snippet, but:
+    ///
+    /// # Drawbacks
+    ///
+    /// This will construct stdin object with a separate buffer, in addition to the buffer that
+    /// stdin already uses. This may cause:
+    ///
+    /// * unexpected behaviour when mixing `Reader` usage with
+    /// * double-buffering, which _may_ affect performance. But on the normal usage, `StdinLock`
+    ///   should just pass the read through and not buffer.
+    ///
+    /// So if you're not trying to get last percent of performance and you operate on stdin solely
+    /// using the `Reader`, you're free to use this constructor.
+    pub fn from_stdin_naive() -> Reader<io::BufReader<io::Stdin>> {
+        Reader::new(io::BufReader::new(io::stdin()))
+    }
+}
+
 impl Reader<io::BufReader<fs::File>> {
     /// Opens a file and wraps in Reader
     ///

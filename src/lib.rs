@@ -33,8 +33,7 @@
 //! # use whiteread::Reader;
 //! # foo().unwrap();
 //! # fn foo() -> whiteread::reader::Result<()> {
-//! let i = std::io::stdin();
-//! let mut i = Reader::new(i.lock());
+//! let mut i = Reader::from_stdin_naive();
 //! while let Some(f) = i.parse::<Option<f64>>()? {
 //!     println!("{}", f);
 //! }
