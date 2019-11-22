@@ -59,14 +59,17 @@ pub use self::reader::Reader;
 /// Leftovers are considered an error.
 /// This function locks a mutex and allocates a buffer, so
 /// don't use it when reading more than few lines –
-/// use [`Reader`](reader::Reader) instead.
+/// use [`Reader`](reader::Reader) or [`parse_stdin`] instead.
+///
+/// Note that
 ///
 /// # Examples
 /// ```no_run
 /// # use whiteread::parse_line;
 /// let x: i32 = parse_line().unwrap();
 /// ```
-pub fn parse_line<T: FromStream>() -> stream::Result<T> {
+pub fn parse_line<T: FromStream>() -> reader::Result<T> {
+    static LINE_NUMBER: std::sync::atomic::AtomicU64 = 
     let mut line = String::new();
     io::stdin().read_line(&mut line)?;
     parse_string(&line)
@@ -89,6 +92,19 @@ pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
     } else {
         Ok(value)
     }
+}
+
+/// Parse the whole stdin as a [`FromStream`] value
+///
+/// Use [`Reader`](reader::Reader) if you want more complex logic.
+///
+/// # Examples
+/// ```
+/// # use whiteread::parse_stdin;
+/// /// Read whitespace-separated numbers from stdin, newline agnostic.
+/// let numbers: Vec<i32> = parse_stdin().unwrap()
+/// ```
+fn parse_stdin<T: FromStream>() -> reader::Result<T> {
 }
 
 /// Parses a whole file as a [`FromStream`] value

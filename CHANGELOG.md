@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 – 2019-06-15
+
+* Removed most of reexport from crate root.
+* Renamed `White` trait to `FromStream` and reorganized modules a little bit.
+* Removed `reader::BorrowedError`. The intended usage of this struct was avoid
+  allocations on a hot path (in a case errors are expected). You can now
+  disable rendering errors using `WithCheapError` adapter, which should cause
+  the `reader::Error` not to allocate.
+* Removed `pretty_unwrap` and make the `Debug` display rendered errors by default.
+* Split the `Error::TooShort` to differentiate between zero input and partial input.
+* Implemented `FromStream` for `Option` that returns `None` on empty input.
+* Added `Reader::from_stdin_naive`. This helper allows to avoid explitely calling
+  and locking `io::stdin`, but has some small disadvantages (hence “naive”).
+* Added rendered errors to `parse_line`.
+* Added `parse_stdin` helper for parsing whole stdin.
+* Bumped minimal Rust version to 1.18
+
 ## 0.4.4 – 2017-11-19
 
 * Added a type annotation in a test (needed due to rust/pull/44287)

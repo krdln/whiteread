@@ -143,6 +143,10 @@ impl Reader<io::BufReader<io::Stdin>> {
     ///
     /// So if you're not trying to get last percent of performance and you operate on stdin solely
     /// using the `Reader`, you're free to use this constructor.
+    ///
+    /// # See also
+    ///
+    /// * [`parse_stdin`](super::parse_stdin)
     pub fn from_stdin_naive() -> Reader<io::BufReader<io::Stdin>> {
         Reader::new(io::BufReader::new(io::stdin()))
     }
@@ -162,6 +166,10 @@ impl Reader<io::BufReader<fs::File>> {
     /// let mut reader = Reader::open("number.txt").unwrap();
     /// let x: u32 = Reader::open("number.txt").unwrap().parse().unwrap();
     /// ```
+    ///
+    /// # See also
+    ///
+    /// * [`parse_file`](super::parse_file)
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Reader<io::BufReader<fs::File>>> {
         let file = fs::File::open(path)?;
         Ok(Reader::new(io::BufReader::new(file)))
