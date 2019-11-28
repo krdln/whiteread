@@ -7,7 +7,7 @@ Yet another crate for easily reading values from strings or input.
 It was made to mimic `cin >>` functionality
 and to be usable for parsing text input in format used in algorithmic contests.
 
-### [Documentation (0.4.4)](https://docs.rs/whiteread/0.4.4/whiteread/)
+### [Documentation (0.5.0)](https://docs.rs/whiteread/0.5.0/whiteread/)
 
 ### [Crate](https://crates.io/crates/whiteread)
 
@@ -79,7 +79,7 @@ Error: excessive input provided at
 
 ```toml
 [dependencies]
-whiteread = "0.4.4"
+whiteread = "0.5.0"
 ```
 
 Minimal supported Rust version is 1.18.
