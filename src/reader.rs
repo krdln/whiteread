@@ -178,6 +178,10 @@ impl Reader<io::BufReader<fs::File>> {
     /// let mut reader = Reader::open("number.txt").unwrap();
     /// let x: u32 = Reader::open("number.txt").unwrap().parse().unwrap();
     /// ```
+    ///
+    /// # See also
+    ///
+    /// * [`parse_file`](super::parse_file)
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Reader<io::BufReader<fs::File>>> {
         let file = fs::File::open(path)?;
         Ok(Reader::new(io::BufReader::new(file)))

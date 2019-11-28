@@ -54,18 +54,24 @@ pub use self::reader::Reader;
 
 // Helpers -----------------------------------------------------------------------------------------
 
-/// Helper function for parsing [`FromStream`] value from one line of stdin.
+/// Parse [`FromStream`] value from one line of stdin.
 ///
 /// Leftovers are considered an error.
-/// This function locks a mutex and allocates a buffer, so
-/// don't use it when reading more than few lines –
-/// use [`Reader`](reader::Reader) instead.
 ///
 /// # Examples
 /// ```no_run
 /// # use whiteread::parse_line;
 /// let x: i32 = parse_line().unwrap();
 /// ```
+///
+/// # Drawbacks and alternatives
+///
+/// This function locks a mutex and allocates a buffer, so
+/// don't use it when reading more than few lines –
+/// use [`Reader`](reader::Reader) or [`parse_stdin`] instead.
+///
+/// Note that reported line number will be wrong if you're mixing this function with other ways to
+/// read stdin.
 pub fn parse_line<T: FromStream>() -> reader::Result<T> {
     use std::sync::atomic;
     #[allow(deprecated)] // suggested AtomicUsize::new() doesn't work on 1.20
@@ -77,7 +83,9 @@ pub fn parse_line<T: FromStream>() -> reader::Result<T> {
     Reader::single_line(row as u64, line).finish_line()
 }
 
-/// Helper function for parsing [`FromStream`] value from string. Leftovers are considered an error.
+/// Parse [`FromStream`] value from string.
+///
+/// Leftovers are considered an error.
 ///
 /// # Examples
 /// ```

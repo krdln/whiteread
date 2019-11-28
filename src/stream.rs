@@ -1,8 +1,7 @@
-//! This module defines the [`StrStream`][stream::StrStream] and [`FromStream`] traits
+//! This module defines the [`StrStream`] and [`FromStream`] traits
 //!
-//! The [`FromStream`] trait defines how to convert a
-//! [`StrStream`][stream::StrStream] (a stream of strings)
-//! to a value. See [its definition](FromStream) for more documentation.
+//! The [`FromStream`] trait defines how to convert a [`StrStream`] (a stream of strings) to a
+//! value. See [its definition](FromStream) for more documentation.
 
 use std::io;
 use std::str::SplitWhitespace;
