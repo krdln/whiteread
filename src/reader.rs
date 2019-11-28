@@ -155,6 +155,10 @@ impl Reader<io::BufReader<io::Stdin>> {
     ///
     /// So if you're not trying to get last percent of performance and you operate on stdin solely
     /// using the `Reader`, you're free to use this constructor.
+    ///
+    /// # See also
+    ///
+    /// * [`parse_stdin`](super::parse_stdin)
     pub fn from_stdin_naive() -> Reader<io::BufReader<io::Stdin>> {
         Reader::new(io::BufReader::new(io::stdin()))
     }

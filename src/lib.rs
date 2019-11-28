@@ -96,6 +96,22 @@ pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
     }
 }
 
+/// Parse the whole stdin as a [`FromStream`] value
+///
+/// Use [`Reader`](reader::Reader) if you want more complex logic.
+///
+/// # Examples
+/// ```
+/// # use whiteread::parse_stdin;
+/// /// Read whitespace-separated numbers from stdin, newline agnostic.
+/// let numbers: Vec<i32> = parse_stdin().unwrap();
+/// ```
+pub fn parse_stdin<T: FromStream>() -> reader::Result<T> {
+    let stdin = io::stdin();
+    // Explicit return is necessary here to shorten the lifetime of `stdin.lock()`
+    return Reader::new(stdin.lock()).finish();
+}
+
 /// Parses a whole file as a [`FromStream`] value
 ///
 /// Calling this function is equivalent to:
