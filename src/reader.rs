@@ -108,6 +108,18 @@ impl<B: io::BufRead> Reader<B> {
     }
 }
 
+impl Reader<io::Empty> {
+    /// Creates a reader that parses just the given line
+    pub(crate) fn single_line(row: u64, line: String) -> Reader<io::Empty> {
+        Reader {
+            buf: io::empty(),
+            row,
+            line,
+            col: 0,
+        }
+    }
+}
+
 impl Reader<io::BufReader<io::Stdin>> {
     /// Wraps stdin in the reader making some assumptions
     ///

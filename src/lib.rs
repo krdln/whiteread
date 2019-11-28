@@ -66,10 +66,15 @@ pub use self::reader::Reader;
 /// # use whiteread::parse_line;
 /// let x: i32 = parse_line().unwrap();
 /// ```
-pub fn parse_line<T: FromStream>() -> stream::Result<T> {
+pub fn parse_line<T: FromStream>() -> reader::Result<T> {
+    use std::sync::atomic;
+    #[allow(deprecated)] // suggested AtomicUsize::new() doesn't work on 1.20
+    static LINE_NUMBER: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
+    let row = 1 + LINE_NUMBER.fetch_add(1, atomic::Ordering::Relaxed);
+
     let mut line = String::new();
     io::stdin().read_line(&mut line)?;
-    parse_string(&line)
+    Reader::single_line(row as u64, line).finish_line()
 }
 
 /// Helper function for parsing [`FromStream`] value from string. Leftovers are considered an error.
