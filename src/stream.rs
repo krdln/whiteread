@@ -301,7 +301,7 @@ macro_rules! impl_using_from_str {
     ($T:ident) => {
         impl FromStream for $T {
             fn read<I: StrStream>(it: &mut I) -> Result<$T> {
-                try!(it.next())
+                it.next()?
                     .ok_or(Error::TooShort(Progress::Nothing))
                     .and_then(|s| s.parse().or(Err(Error::ParseError)))
             }
