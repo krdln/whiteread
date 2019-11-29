@@ -1,11 +1,14 @@
+// Remove when bumping minimum Rust version to 1.27
+#![allow(bare_trait_objects)]
+
 //! Crate for reading whitespace-separated values.
 //!
-//! The crate defines a trait [`White`](white/trait.White.html), which
+//! The crate defines a trait [`FromStream`](stream::FromStream), which
 //! describes types that can be parsed from whitespace-separated words,
-//! which includes eg. integers, tuples and vectors.
+//! which includes eg. integers, tuples, vectors and various [adapters].
 //!
 //! The definition of whitespace used in this crate is described in
-//! [`SplitAsciiWhitespace`](stream/struct.SplitAsciiWhitespace.html).
+//! [`SplitAsciiWhitespace`](stream::SplitAsciiWhitespace).
 //!
 //! # Examples
 //!
@@ -24,69 +27,65 @@
 //! let x: i32 = parse_line().unwrap();
 //! ```
 //!
-//! Efficient reading from stdin (newline-agnostic) with [`Reader`](reader/struct.Reader.html).
-//! Stops on error.
+//! Efficient reading from stdin (newline-agnostic) with [`Reader`](reader::Reader).
 //!
 //! ```no_run
 //! # use whiteread::Reader;
-//! let i = std::io::stdin();
-//! let mut i = Reader::new(i.lock());
-//! while let Ok(f) = i.parse::<f64>() {
+//! # foo().unwrap();
+//! # fn foo() -> whiteread::reader::Result<()> {
+//! let mut i = Reader::from_stdin_naive();
+//! while let Some(f) = i.parse::<Option<f64>>()? {
 //!     println!("{}", f);
 //! }
+//! # Ok(())
+//! # }
 //! ```
-//!
-//! If you want better error handling in while-let loops
-//! (stop on end of input, but propagate all the other errors),
-//! use [`none_on_too_short`](reader/trait.BorrowedResultExt.html#tymethod.none_on_too_short)
 
 use std::io;
 use std::path::Path;
 
 pub mod stream;
+pub use self::stream::FromStream;
 
-pub mod white;
-pub use self::white::{Leftovers, ParseError, TooShort};
-pub use self::white::{Lengthed, Skip, SkipAll, White, Zeroed};
+pub mod adapters;
 
 pub mod reader;
-pub use self::reader::OwnedError as ReaderError;
-pub use self::reader::OwnedResult as ReaderResult;
 pub use self::reader::Reader;
-
-/// Reexports of traits containing the extension methods.
-///
-/// The prelude is usually glob-imported:
-///
-/// ```
-/// use whiteread::prelude::*;
-/// ```
-pub mod prelude {
-    pub use super::reader::BorrowedResultExt;
-    pub use super::reader::PrettyUnwrap;
-}
 
 // Helpers -----------------------------------------------------------------------------------------
 
-/// Helper function for parsing `White` value from one line of stdin.
+/// Parse [`FromStream`] value from one line of stdin.
 ///
 /// Leftovers are considered an error.
-/// This function locks a mutex and allocates a buffer, so
-/// don't use it when reading more than few lines –
-/// use [`Reader`](reader/struct.Reader.html) instead.
 ///
 /// # Examples
 /// ```no_run
 /// # use whiteread::parse_line;
 /// let x: i32 = parse_line().unwrap();
 /// ```
-pub fn parse_line<T: White>() -> white::Result<T> {
+///
+/// # Drawbacks and alternatives
+///
+/// This function locks a mutex and allocates a buffer, so
+/// don't use it when reading more than few lines –
+/// use [`Reader`](reader::Reader) or [`parse_stdin`] instead.
+///
+/// Note that reported line number will be wrong if you're mixing this function with other ways to
+/// read stdin.
+pub fn parse_line<T: FromStream>() -> reader::Result<T> {
+    use std::sync::atomic;
+    #[allow(deprecated)] // suggested AtomicUsize::new() doesn't work on 1.20
+    static LINE_NUMBER: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
+    let row = 1 + LINE_NUMBER.fetch_add(1, atomic::Ordering::Relaxed);
+
     let mut line = String::new();
     io::stdin().read_line(&mut line)?;
-    parse_string(&line)
+    Reader::single_line(row as u64, line).finish_line()
 }
 
-/// Helper function for parsing `White` value from string. Leftovers are considered an error.
+/// Parse [`FromStream`] value from string.
+///
+/// Leftovers are considered an error.
 ///
 /// # Examples
 /// ```
@@ -94,24 +93,40 @@ pub fn parse_line<T: White>() -> white::Result<T> {
 /// let number: i32 = parse_string(" 123  ").unwrap();
 /// assert!(number == 123);
 /// ```
-pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
+pub fn parse_string<T: FromStream>(s: &str) -> stream::Result<T> {
     let mut stream = stream::SplitAsciiWhitespace::new(s);
-    let value = White::read(&mut stream)?;
+    let value = FromStream::read(&mut stream)?;
 
     if let Ok(Some(_)) = stream::StrStream::next(&mut stream) {
-        Err(Leftovers)
+        Err(stream::Error::Leftovers)
     } else {
         Ok(value)
     }
 }
 
-/// Parses a whole file as a `White` value
+/// Parse the whole stdin as a [`FromStream`] value
+///
+/// Use [`Reader`](reader::Reader) if you want more complex logic.
+///
+/// # Examples
+/// ```
+/// # use whiteread::parse_stdin;
+/// /// Read whitespace-separated numbers from stdin, newline agnostic.
+/// let numbers: Vec<i32> = parse_stdin().unwrap();
+/// ```
+pub fn parse_stdin<T: FromStream>() -> reader::Result<T> {
+    let stdin = io::stdin();
+    // Explicit return is necessary here to shorten the lifetime of `stdin.lock()`
+    return Reader::new(stdin.lock()).finish();
+}
+
+/// Parses a whole file as a [`FromStream`] value
 ///
 /// Calling this function is equivalent to:
 ///
 /// ```no_run
-/// # use whiteread::{Reader, ReaderResult, White};
-/// # fn foo<T: White>() -> ReaderResult<T> {
+/// # use whiteread::{Reader, reader, FromStream};
+/// # fn foo<T: FromStream>() -> reader::Result<T> {
 /// # let path = "foo";
 /// # Ok(
 /// Reader::open(path)?.finish()?
@@ -120,7 +135,7 @@ pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
 /// ```
 ///
 /// If you want to parse the file in multiple steps,
-/// use [`Reader::open`](reader/struct.Reader.html#method.open).
+/// use [`Reader::open`](crate::reader::Reader::open).
 ///
 /// # Examples
 ///
@@ -130,6 +145,6 @@ pub fn parse_string<T: White>(s: &str) -> white::Result<T> {
 /// # use whiteread::parse_file;
 /// let x: (i32, i32) = parse_file("coords.txt").unwrap();
 /// ```
-pub fn parse_file<T: White, P: AsRef<Path>>(path: P) -> ReaderResult<T> {
+pub fn parse_file<T: FromStream, P: AsRef<Path>>(path: P) -> reader::Result<T> {
     Ok(Reader::open(path)?.finish()?)
 }

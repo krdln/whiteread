@@ -1,11 +1,11 @@
 [package]
 name = "whiteread"
-version = "0.4.4"
+version = "0.5.0"
 authors = ["Michał Krasnoborski <mkrdln@gmail.com>"]
 
 description = "Crate for easily reading whitespace-separated values from strings or input."
 
-documentation = "https://docs.rs/whiteread/0.4.3/whiteread/"
+documentation = "https://docs.rs/whiteread/0.5.0/whiteread/"
 repository = "https://github.com/krdln/whiteread"
 readme = "README.md"
 keywords = ["read", "input", "scanf", "whitespace", "iostreams"]

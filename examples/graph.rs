@@ -1,10 +1,9 @@
 extern crate whiteread;
 
-use whiteread::{Reader, ReaderResult};
+use whiteread::reader;
 
-fn read() -> ReaderResult<Vec<Vec<u32>>> {
-    let i = std::io::stdin();
-    let mut i = Reader::new(i.lock());
+fn read() -> reader::Result<Vec<Vec<u32>>> {
+    let mut i = reader::Reader::from_stdin_naive();
 
     // reading a graph in a format commonly used in algorithmic contests
     let (verts, edges): (usize, usize) = i.line()?;

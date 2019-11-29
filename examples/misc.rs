@@ -1,5 +1,6 @@
 extern crate whiteread;
-use whiteread::{parse_string, Lengthed, Reader, White};
+use whiteread::adapters::Lengthed;
+use whiteread::{parse_string, FromStream, Reader};
 
 fn main() {
     // parse_string function
@@ -41,13 +42,13 @@ fn main() {
     // using iterator directly
     for s in ["1 string sss", "2 vec 1 2 3", "3 ??? bla bla"].iter() {
         let mut words = s.split_whitespace();
-        let (x, name): (u8, String) = White::read(&mut words).unwrap();
+        let (x, name): (u8, String) = FromStream::read(&mut words).unwrap();
         print!("example nr {}: {}: ", x, name);
 
         if &name == "string" {
             println!("{:?}", String::read(&mut words).unwrap());
         } else if &name == "vec" {
-            println!("{:?}", <Vec<u16> as White>::read(&mut words).unwrap()) // try whithout "as" :P
+            println!("{:?}", <Vec<u16> as FromStream>::read(&mut words).unwrap()) // try whithout "as" :P
         } else {
             println!("something");
         }

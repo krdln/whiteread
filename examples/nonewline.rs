@@ -1,9 +1,9 @@
 extern crate whiteread;
-use whiteread::{Lengthed, Reader};
+use whiteread::adapters::Lengthed;
+use whiteread::Reader;
 
 fn main() {
-    let i = std::io::stdin();
-    let mut i = Reader::new(i.lock());
+    let mut i = Reader::from_stdin_naive();
 
     println!(
         "Type a number n and then n pairs of numbers.\n\
